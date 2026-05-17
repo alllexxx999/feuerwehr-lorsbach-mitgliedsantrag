@@ -584,6 +584,58 @@
   }
   .contact-block strong { color: var(--fw-red); }
 
+  /* Email announcement option */
+  .email-option {
+    background: #eef5ff;
+    border-left: 4px solid #1976d2;
+    padding: 18px 22px;
+    border-radius: var(--radius-sm);
+    margin: 24px auto;
+    max-width: 600px;
+    text-align: left;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .email-option-icon {
+    color: #1976d2;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+  .email-option-content { flex: 1; min-width: 0; }
+  .email-option-content h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    color: var(--fw-black);
+  }
+  .email-option-content p {
+    margin: 0 0 12px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--fw-grey-700);
+  }
+  .email-option-content .btn {
+    font-size: 13px;
+    padding: 10px 18px;
+    width: auto;
+  }
+  .email-option .btn-email {
+    background: #1976d2;
+    color: var(--fw-white);
+  }
+  .email-option .btn-email:hover { background: #115293; }
+  .email-option-hint {
+    font-size: 12px;
+    color: var(--fw-grey-500);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  @media (max-width: 480px) {
+    .email-option { flex-direction: column; gap: 6px; }
+    .email-option-icon { padding-top: 0; }
+    .email-option-content .btn { width: 100%; justify-content: center; }
+  }
+
   /* ---------- FOOTER ---------- */
   footer {
     background: var(--fw-black);
@@ -888,6 +940,21 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18-5 5h3v6h4v-6h3l-5-5z" transform="rotate(180 12 12)"/></svg>
           PDF erneut herunterladen
         </button>
+
+        <div class="email-option">
+          <div class="email-option-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </div>
+          <div class="email-option-content">
+            <h3>Optional: Vorstand vorab informieren</h3>
+            <p>Senden Sie eine kurze Ankündigung per E-Mail, damit der Vorstand Ihren Antrag erwartet. Ihr E-Mail-Programm öffnet sich mit einem vorbereiteten Text – Sie müssen nur noch auf „Senden" klicken.</p>
+            <button type="button" id="sendEmailBtn" class="btn btn-email">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              E-Mail-Ankündigung senden
+            </button>
+            <p class="email-option-hint">Aus Sicherheitsgründen wird Ihre IBAN <strong>nicht</strong> in der E-Mail übertragen – diese steht nur auf dem unterschriebenen PDF.</p>
+          </div>
+        </div>
 
         <div class="next-steps">
           <h3>So geht es weiter:</h3>
@@ -1615,6 +1682,62 @@
       generatePdf();
     } catch (e) { console.error(e); }
   });
+
+  // ---------- EMAIL ANNOUNCEMENT (mailto) ----------
+  function buildAnnouncementMailto() {
+    const d = gatherData();
+    const fullName = `${d.vorname} ${d.nachname}`.trim();
+    const subject = `Ankündigung: Antrag auf fördernde Mitgliedschaft – ${fullName}`;
+    const lines = [
+      'Sehr geehrter Vorstand der Freiwilligen Feuerwehr Lorsbach e.V.,',
+      '',
+      'hiermit möchte ich Ihnen ankündigen, dass ich einen Antrag auf eine fördernde Mitgliedschaft ausgefüllt habe. Den unterschriebenen Antrag werde ich Ihnen in den kommenden Tagen per Post zukommen lassen.',
+      '',
+      'Meine Antragsdaten:',
+      `• Name: ${fullName}`,
+      `• Geburtsdatum: ${formatDateDe(d.geburtsdatum)}`,
+      `• Anschrift: ${d.strasse}, ${d.plz} ${d.ort}`
+    ];
+    if (d.email) lines.push(`• E-Mail: ${d.email}`);
+    lines.push(`• Jährlicher Mitgliedsbeitrag: ${d.beitrag.toFixed(2).replace('.', ',')} €`);
+    lines.push('');
+    lines.push('Die Bankverbindung für das SEPA-Lastschriftmandat befindet sich aus Sicherheitsgründen ausschließlich auf dem unterschriebenen Antrag.');
+    lines.push('');
+    lines.push('Mit freundlichen Grüßen');
+    lines.push(fullName);
+    lines.push('');
+    lines.push('---');
+    lines.push('Diese Ankündigung wurde über das Online-Formular erstellt:');
+    lines.push('https://alllexxx999.github.io/feuerwehr-lorsbach-mitgliedsantrag/');
+
+    const body = lines.join('\r\n');
+    return 'mailto:verein@feuerwehr-lorsbach.de'
+      + '?subject=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(body);
+  }
+
+  const sendEmailBtn = document.getElementById('sendEmailBtn');
+  if (sendEmailBtn) {
+    sendEmailBtn.addEventListener('click', () => {
+      const url = buildAnnouncementMailto();
+      // Use a temporary anchor for max compatibility across browsers/mail clients
+      const a = document.createElement('a');
+      a.href = url;
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // Feedback: short visual confirmation on the button
+      const original = sendEmailBtn.innerHTML;
+      sendEmailBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> E-Mail-Programm geöffnet';
+      sendEmailBtn.disabled = true;
+      setTimeout(() => {
+        sendEmailBtn.innerHTML = original;
+        sendEmailBtn.disabled = false;
+      }, 4000);
+    });
+  }
 
   // ---------- PREVENT FORM SUBMIT ----------
   form.addEventListener('submit', e => e.preventDefault());
