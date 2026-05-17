@@ -282,7 +282,7 @@
     position: relative;
   }
   .amount-wrap input {
-    padding-right: 44px;
+    padding-right: 28px;
     font-weight: 700;
     font-size: 18px;
     text-align: right;
@@ -290,12 +290,13 @@
   .amount-wrap::after {
     content: '€';
     position: absolute;
-    right: 14px;
+    right: 8px;
     top: 50%;
     transform: translateY(-50%);
     font-weight: 700;
     color: var(--fw-grey-700);
     font-size: 18px;
+    pointer-events: none;
   }
   .amount-quick {
     display: flex;
@@ -708,9 +709,13 @@
           </div>
           <div class="field">
             <label for="geburtsdatum">Geburtsdatum <span class="req">*</span></label>
-            <input type="date" id="geburtsdatum" name="geburtsdatum" autocomplete="bday" required />
-            <span class="hint">Bei Minderjährigen unterschreibt der gesetzliche Vertreter.</span>
-            <span class="error-msg">Bitte geben Sie ein gültiges Geburtsdatum an.</span>
+            <input type="text" id="geburtsdatum" name="geburtsdatum"
+                   placeholder="tt.mm.jjjj"
+                   autocomplete="bday" required
+                   maxlength="10" inputmode="numeric"
+                   pattern="\d{2}\.\d{2}\.\d{4}" />
+            <span class="hint">Format: tt.mm.jjjj &nbsp;·&nbsp; Bei Minderjährigen unterschreibt der gesetzliche Vertreter.</span>
+            <span class="error-msg">Bitte geben Sie ein gültiges Geburtsdatum im Format tt.mm.jjjj an.</span>
           </div>
           <div class="field">
             <label for="email">E-Mail-Adresse <span class="hint" style="font-weight:400;">(optional)</span></label>
@@ -1098,12 +1103,15 @@
       return /^\d{5}$/.test(v);
     }
     if (input.id === 'geburtsdatum') {
-      const d = new Date(v);
-      if (isNaN(d)) return false;
-      const now = new Date();
-      if (d > now) return false;
-      // realistic age range
-      if (d.getFullYear() < 1900) return false;
+      const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(v);
+      if (!m) return false;
+      const day = parseInt(m[1], 10);
+      const month = parseInt(m[2], 10);
+      const year = parseInt(m[3], 10);
+      const d = new Date(year, month - 1, day);
+      if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return false;
+      if (d > new Date()) return false;
+      if (year < 1900) return false;
       return true;
     }
     if (input.id === 'beitrag') {
@@ -1144,6 +1152,32 @@
   const emailInput = document.getElementById('email');
   emailInput.removeAttribute('required');
   const originalValidateStep = validateStep;
+
+  // ---------- BIRTHDAY AUTO-FORMAT ----------
+  const geburtsdatumInput = document.getElementById('geburtsdatum');
+  geburtsdatumInput.addEventListener('input', e => {
+    const inp = e.target;
+    const oldValue = inp.value;
+    const oldCaret = inp.selectionStart || 0;
+    // Count digits before caret in old value
+    const digitsBeforeCaret = oldValue.slice(0, oldCaret).replace(/\D/g, '').length;
+
+    const digits = oldValue.replace(/\D/g, '').slice(0, 8);
+    let formatted = digits;
+    if (digits.length > 4)      formatted = `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
+    else if (digits.length > 2) formatted = `${digits.slice(0, 2)}.${digits.slice(2)}`;
+
+    if (formatted !== oldValue) {
+      inp.value = formatted;
+      // Restore caret to the same digit position
+      let newCaret = 0, count = 0;
+      for (let i = 0; i < formatted.length && count < digitsBeforeCaret; i++) {
+        if (/\d/.test(formatted[i])) count++;
+        newCaret = i + 1;
+      }
+      try { inp.setSelectionRange(newCaret, newCaret); } catch (_) {}
+    }
+  });
 
   // ---------- IBAN HANDLING ----------
   // Official IBAN lengths for SEPA-Zone countries (BBAN + 4-char prefix)
@@ -1334,8 +1368,13 @@
   // ---------- SUMMARY ----------
   function formatDateDe(d) {
     if (!d) return '';
-    const [y, m, day] = d.split('-');
-    return `${day}.${m}.${y}`;
+    // ISO format YYYY-MM-DD → DD.MM.YYYY (kept for backward compatibility)
+    if (/^\d{4}-\d{2}-\d{2}/.test(d)) {
+      const [y, m, day] = d.split('-');
+      return `${day}.${m}.${y.slice(0, 4)}`;
+    }
+    // Already in German DD.MM.YYYY format
+    return d;
   }
 
   function gatherData() {
