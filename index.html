@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Antrag auf fördernde Mitgliedschaft – Freiwillige Feuerwehr Lorsbach e.V.</title>
+<meta name="description" content="Werden Sie förderndes Mitglied der Freiwilligen Feuerwehr Lorsbach e.V. – einfacher Online-Antrag mit Druck-PDF." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Condensed:wght@700;900&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<style>
+  :root {
+    --fw-red: #c8102e;
+    --fw-red-dark: #9a0c23;
+    --fw-red-light: #e63946;
+    --fw-black: #1a1a1a;
+    --fw-grey-900: #2c2c2c;
+    --fw-grey-700: #4a4a4a;
+    --fw-grey-500: #757575;
+    --fw-grey-300: #cccccc;
+    --fw-grey-100: #f5f5f5;
+    --fw-grey-50:  #fafafa;
+    --fw-gold: #d4af37;
+    --fw-white: #ffffff;
+    --fw-success: #2e7d32;
+    --fw-error: #c62828;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--fw-grey-100);
+    color: var(--fw-black);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- HEADER ---------- */
+  .site-header {
+    background: linear-gradient(180deg, var(--fw-red) 0%, var(--fw-red-dark) 100%);
+    color: var(--fw-white);
+    border-bottom: 4px solid var(--fw-black);
+    box-shadow: var(--shadow-md);
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .logo {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    background: var(--fw-white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-md);
+    border: 3px solid var(--fw-black);
+  }
+  .logo svg { width: 50px; height: 50px; }
+  .header-title {
+    font-family: 'Roboto Condensed', 'Roboto', sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .header-title .eyebrow {
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0.9;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .header-title h1 {
+    margin: 0;
+    font-size: clamp(20px, 3.5vw, 30px);
+    line-height: 1.1;
+  }
+  .header-title .subtitle {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.95;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 6px;
+  }
+
+  /* ---------- INTRO ---------- */
+  .intro-bar {
+    background: var(--fw-black);
+    color: var(--fw-white);
+    padding: 14px 24px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .intro-bar strong { color: var(--fw-gold); }
+
+  /* ---------- MAIN LAYOUT ---------- */
+  main {
+    max-width: 880px;
+    margin: 32px auto;
+    padding: 0 16px 64px;
+  }
+
+  /* ---------- PROGRESS ---------- */
+  .progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    background: var(--fw-white);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  .step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    gap: 6px;
+    min-width: 0;
+  }
+  .step-indicator:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    left: 60%;
+    right: -40%;
+    height: 3px;
+    background: var(--fw-grey-300);
+    z-index: 0;
+  }
+  .step-indicator.done:not(:last-child)::after { background: var(--fw-red); }
+  .step-circle {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--fw-grey-300);
+    color: var(--fw-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    z-index: 1;
+    transition: background 0.25s;
+    font-size: 14px;
+  }
+  .step-indicator.active .step-circle {
+    background: var(--fw-red);
+    box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.18);
+  }
+  .step-indicator.done .step-circle { background: var(--fw-red); }
+  .step-indicator.done .step-circle::before { content: '✓'; }
+  .step-indicator.done .step-circle .num { display: none; }
+  .step-label {
+    font-size: 11px;
+    color: var(--fw-grey-700);
+    text-align: center;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+  }
+  .step-indicator.active .step-label { color: var(--fw-black); font-weight: 700; }
+
+  /* ---------- CARD / FORM ---------- */
+  .card {
+    background: var(--fw-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border-top: 4px solid var(--fw-red);
+  }
+  .card-header {
+    padding: 24px 32px 16px;
+    border-bottom: 1px solid var(--fw-grey-100);
+  }
+  .card-header h2 {
+    margin: 0;
+    font-family: 'Roboto Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    text-transform: uppercase;
+    color: var(--fw-black);
+    letter-spacing: 0.5px;
+  }
+  .card-header p {
+    margin: 6px 0 0;
+    color: var(--fw-grey-700);
+    font-size: 14px;
+  }
+  .card-body { padding: 24px 32px; }
+  .card-footer {
+    padding: 16px 32px 24px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--fw-grey-100);
+    background: var(--fw-grey-50);
+  }
+
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- FORM ELEMENTS ---------- */
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 20px;
+  }
+  .field-grid .full { grid-column: 1 / -1; }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fw-grey-900);
+    letter-spacing: 0.2px;
+  }
+  .field label .req { color: var(--fw-red); font-weight: 700; }
+  .field .hint {
+    font-size: 12px;
+    color: var(--fw-grey-500);
+    margin-top: -2px;
+  }
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="number"],
+  .field input[type="date"],
+  .field input[type="tel"] {
+    padding: 11px 12px;
+    border: 1.5px solid var(--fw-grey-300);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--fw-black);
+    background: var(--fw-white);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--fw-red);
+    box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.15);
+  }
+  .field input[aria-invalid="true"] {
+    border-color: var(--fw-error);
+    background: #fff5f5;
+  }
+  .field .error-msg {
+    color: var(--fw-error);
+    font-size: 12px;
+    font-weight: 500;
+    display: none;
+  }
+  .field input[aria-invalid="true"] ~ .error-msg { display: block; }
+
+  /* Amount input */
+  .amount-wrap {
+    position: relative;
+  }
+  .amount-wrap input {
+    padding-right: 44px;
+    font-weight: 700;
+    font-size: 18px;
+    text-align: right;
+  }
+  .amount-wrap::after {
+    content: '€';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    color: var(--fw-grey-700);
+    font-size: 18px;
+  }
+  .amount-quick {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .amount-quick button {
+    background: var(--fw-white);
+    border: 1.5px solid var(--fw-grey-300);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--fw-grey-700);
+  }
+  .amount-quick button:hover { border-color: var(--fw-red); color: var(--fw-red); }
+  .amount-quick button.active {
+    background: var(--fw-red);
+    border-color: var(--fw-red);
+    color: var(--fw-white);
+  }
+
+  /* IBAN input */
+  .field input.iban {
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Checkboxes */
+  .check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .check {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    background: var(--fw-grey-50);
+    border: 1.5px solid var(--fw-grey-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .check:hover { border-color: var(--fw-red-light); }
+  .check input { margin-top: 2px; flex-shrink: 0; transform: scale(1.2); accent-color: var(--fw-red); cursor: pointer; }
+  .check span { font-size: 14px; line-height: 1.5; color: var(--fw-grey-900); }
+  .check.checked { border-color: var(--fw-red); background: #fff8f9; }
+  .check .req { color: var(--fw-red); font-weight: 700; }
+
+  /* Legal box */
+  .legal-box {
+    background: var(--fw-grey-50);
+    border-left: 4px solid var(--fw-red);
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--fw-grey-900);
+  }
+  .legal-box strong { color: var(--fw-black); }
+  details.legal-collapse {
+    background: var(--fw-grey-50);
+    border: 1px solid var(--fw-grey-300);
+    border-radius: var(--radius-sm);
+    margin: 16px 0;
+  }
+  details.legal-collapse > summary {
+    padding: 14px 18px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--fw-grey-900);
+    font-size: 14px;
+    user-select: none;
+  }
+  details.legal-collapse[open] > summary {
+    border-bottom: 1px solid var(--fw-grey-300);
+  }
+  details.legal-collapse .content {
+    padding: 16px 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--fw-grey-700);
+  }
+  details.legal-collapse .content h4 {
+    margin: 14px 0 6px;
+    font-size: 14px;
+    color: var(--fw-black);
+  }
+  details.legal-collapse .content ul { padding-left: 20px; margin: 8px 0; }
+  details.legal-collapse .content li { margin-bottom: 4px; }
+
+  /* ---------- BUTTONS ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary {
+    background: var(--fw-red);
+    color: var(--fw-white);
+    box-shadow: var(--shadow-sm);
+  }
+  .btn-primary:hover { background: var(--fw-red-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--fw-grey-300); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-secondary {
+    background: var(--fw-white);
+    color: var(--fw-grey-900);
+    border: 1.5px solid var(--fw-grey-300);
+  }
+  .btn-secondary:hover { border-color: var(--fw-grey-700); background: var(--fw-grey-50); }
+  .btn-success {
+    background: var(--fw-success);
+    color: var(--fw-white);
+    box-shadow: var(--shadow-md);
+    font-size: 16px;
+    padding: 14px 28px;
+  }
+  .btn-success:hover { background: #1b5e20; }
+
+  /* ---------- SUMMARY ---------- */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 16px;
+    background: var(--fw-grey-50);
+    padding: 18px 20px;
+    border-radius: var(--radius-sm);
+    margin: 16px 0;
+    border-left: 4px solid var(--fw-red);
+  }
+  .summary-grid dt {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fw-grey-700);
+  }
+  .summary-grid dd {
+    margin: 0;
+    font-size: 14px;
+    color: var(--fw-black);
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  /* ---------- SUCCESS PAGE ---------- */
+  .success-state {
+    text-align: center;
+    padding: 16px 0 24px;
+  }
+  .success-icon {
+    width: 80px; height: 80px;
+    background: var(--fw-success);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    box-shadow: 0 0 0 8px rgba(46, 125, 50, 0.15);
+  }
+  .success-icon svg { width: 44px; height: 44px; fill: white; }
+  .success-state h2 {
+    margin: 0 0 8px;
+    font-family: 'Roboto Condensed', sans-serif;
+    text-transform: uppercase;
+    font-size: 26px;
+  }
+  .success-state .lead {
+    color: var(--fw-grey-700);
+    font-size: 16px;
+    max-width: 540px;
+    margin: 0 auto 20px;
+  }
+  .next-steps {
+    background: #fff8e1;
+    border-left: 4px solid var(--fw-gold);
+    padding: 18px 22px;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    margin: 20px auto;
+    max-width: 600px;
+  }
+  .next-steps h3 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    color: var(--fw-black);
+  }
+  .next-steps ol { margin: 8px 0 0; padding-left: 22px; font-size: 14px; color: var(--fw-grey-900); }
+  .next-steps li { margin-bottom: 6px; }
+  .contact-block {
+    background: var(--fw-grey-50);
+    padding: 18px 22px;
+    border-radius: var(--radius-sm);
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: left;
+    font-size: 14px;
+  }
+  .contact-block strong { color: var(--fw-red); }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    background: var(--fw-black);
+    color: #ccc;
+    padding: 28px 24px;
+    text-align: center;
+    font-size: 13px;
+    border-top: 4px solid var(--fw-red);
+  }
+  footer a { color: var(--fw-gold); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .footer-inner { max-width: 1100px; margin: 0 auto; }
+  footer .footer-meta { margin-top: 8px; opacity: 0.7; font-size: 12px; }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 720px) {
+    .header-inner { padding: 16px; gap: 14px; }
+    .logo { width: 56px; height: 56px; }
+    .logo svg { width: 38px; height: 38px; }
+    .header-title h1 { font-size: 18px; }
+    .header-title .eyebrow { font-size: 11px; letter-spacing: 1.5px; }
+    .header-title .subtitle { font-size: 13px; }
+    .card-body { padding: 20px 18px; }
+    .card-header { padding: 20px 18px 12px; }
+    .card-footer { padding: 14px 18px 18px; }
+    .field-grid { grid-template-columns: 1fr; gap: 14px; }
+    .step-label { display: none; }
+    .step-indicator:not(:last-child)::after { left: 50%; right: -50%; }
+    .progress { padding: 14px 10px; }
+    .btn { padding: 11px 18px; font-size: 14px; width: 100%; justify-content: center; }
+    .card-footer { flex-direction: column-reverse; }
+    .summary-grid { grid-template-columns: 1fr; gap: 4px 0; padding: 14px 16px; }
+    .summary-grid dt { padding-top: 8px; border-top: 1px solid var(--fw-grey-300); }
+    .summary-grid dt:first-child { border-top: none; padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo" aria-hidden="true">
+      <!-- Stylized Feuerwehr emblem: helmet + crossed axes -->
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <!-- Crossed axes -->
+        <g stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="10" y1="54" x2="48" y2="16" stroke="#5a3a1f"/>
+          <line x1="54" y1="54" x2="16" y2="16" stroke="#5a3a1f"/>
+          <path d="M44 12 L56 16 L52 24 L40 20 Z" fill="#c8102e"/>
+          <path d="M20 12 L8 16 L12 24 L24 20 Z" fill="#c8102e"/>
+        </g>
+        <!-- Helmet -->
+        <g transform="translate(32 38)">
+          <ellipse cx="0" cy="2" rx="14" ry="9" fill="#c8102e" stroke="#1a1a1a" stroke-width="1.5"/>
+          <path d="M-14 2 Q -14 -10 0 -10 Q 14 -10 14 2" fill="#c8102e" stroke="#1a1a1a" stroke-width="1.5"/>
+          <rect x="-14" y="2" width="28" height="3" fill="#d4af37" stroke="#1a1a1a" stroke-width="1"/>
+          <circle cx="0" cy="-3" r="3" fill="#d4af37" stroke="#1a1a1a" stroke-width="1"/>
+        </g>
+      </svg>
+    </div>
+    <div class="header-title">
+      <div class="eyebrow">Freiwillige Feuerwehr Lorsbach e.V.</div>
+      <h1>Antrag auf fördernde Mitgliedschaft</h1>
+      <div class="subtitle">Werden Sie Teil unseres Vereins – online und in wenigen Minuten</div>
+    </div>
+  </div>
+</header>
+
+<div class="intro-bar">
+  Ihre Unterstützung sichert <strong>Ausstattung, Jugendarbeit und Veranstaltungen</strong> – herzlichen Dank!
+</div>
+
+<main>
+  <!-- Progress -->
+  <nav class="progress" aria-label="Antragsfortschritt">
+    <div class="step-indicator active" data-step="1"><div class="step-circle"><span class="num">1</span></div><div class="step-label">Person</div></div>
+    <div class="step-indicator" data-step="2"><div class="step-circle"><span class="num">2</span></div><div class="step-label">Beitrag</div></div>
+    <div class="step-indicator" data-step="3"><div class="step-circle"><span class="num">3</span></div><div class="step-label">Bankdaten</div></div>
+    <div class="step-indicator" data-step="4"><div class="step-circle"><span class="num">4</span></div><div class="step-label">Datenschutz</div></div>
+    <div class="step-indicator" data-step="5"><div class="step-circle"><span class="num">5</span></div><div class="step-label">Abschluss</div></div>
+  </nav>
+
+  <form id="antragForm" class="card" novalidate>
+
+    <!-- ===================== STEP 1 ===================== -->
+    <section class="step active" data-step="1">
+      <div class="card-header">
+        <h2>1. Persönliche Daten</h2>
+        <p>Bitte tragen Sie Ihre persönlichen Daten ein. Felder mit <span class="req" style="color:var(--fw-red);font-weight:700;">*</span> sind Pflichtfelder.</p>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <div class="field">
+            <label for="vorname">Vorname <span class="req">*</span></label>
+            <input type="text" id="vorname" name="vorname" autocomplete="given-name" required maxlength="60" />
+            <span class="error-msg">Bitte geben Sie Ihren Vornamen an.</span>
+          </div>
+          <div class="field">
+            <label for="nachname">Nachname <span class="req">*</span></label>
+            <input type="text" id="nachname" name="nachname" autocomplete="family-name" required maxlength="60" />
+            <span class="error-msg">Bitte geben Sie Ihren Nachnamen an.</span>
+          </div>
+          <div class="field">
+            <label for="geburtsdatum">Geburtsdatum <span class="req">*</span></label>
+            <input type="date" id="geburtsdatum" name="geburtsdatum" autocomplete="bday" required />
+            <span class="hint">Bei Minderjährigen unterschreibt der gesetzliche Vertreter.</span>
+            <span class="error-msg">Bitte geben Sie ein gültiges Geburtsdatum an.</span>
+          </div>
+          <div class="field">
+            <label for="email">E-Mail-Adresse <span class="hint" style="font-weight:400;">(optional)</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" maxlength="100" />
+            <span class="error-msg">Bitte geben Sie eine gültige E-Mail-Adresse an.</span>
+          </div>
+          <div class="field full">
+            <label for="strasse">Straße und Hausnummer <span class="req">*</span></label>
+            <input type="text" id="strasse" name="strasse" autocomplete="street-address" required maxlength="100" />
+            <span class="error-msg">Bitte geben Sie Ihre Straße und Hausnummer an.</span>
+          </div>
+          <div class="field">
+            <label for="plz">Postleitzahl <span class="req">*</span></label>
+            <input type="text" id="plz" name="plz" autocomplete="postal-code" required maxlength="5" inputmode="numeric" pattern="[0-9]{5}" />
+            <span class="error-msg">Bitte geben Sie eine gültige fünfstellige PLZ an.</span>
+          </div>
+          <div class="field">
+            <label for="ort">Ort <span class="req">*</span></label>
+            <input type="text" id="ort" name="ort" autocomplete="address-level2" required maxlength="60" />
+            <span class="error-msg">Bitte geben Sie Ihren Wohnort an.</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span></span>
+        <button type="button" class="btn btn-primary" data-action="next">Weiter →</button>
+      </div>
+    </section>
+
+    <!-- ===================== STEP 2 ===================== -->
+    <section class="step" data-step="2">
+      <div class="card-header">
+        <h2>2. Mitgliedsbeitrag festlegen</h2>
+        <p>Sie unterstützen die Feuerwehr Lorsbach mit einem jährlichen Mitgliedsbeitrag. Der Mindestbeitrag beträgt <strong>10 € pro Jahr</strong>.</p>
+      </div>
+      <div class="card-body">
+        <div class="field full" style="max-width: 320px;">
+          <label for="beitrag">Jährlicher Mitgliedsbeitrag <span class="req">*</span></label>
+          <div class="amount-wrap">
+            <input type="number" id="beitrag" name="beitrag" required min="10" step="1" value="30" inputmode="numeric" />
+          </div>
+          <div class="amount-quick" role="group" aria-label="Beitrag schnell auswählen">
+            <button type="button" data-amount="10">10 €</button>
+            <button type="button" data-amount="20">20 €</button>
+            <button type="button" data-amount="30" class="active">30 €</button>
+            <button type="button" data-amount="50">50 €</button>
+            <button type="button" data-amount="100">100 €</button>
+          </div>
+          <span class="error-msg">Der Mindestbeitrag beträgt 10 € pro Jahr.</span>
+        </div>
+
+        <div class="legal-box" style="margin-top: 22px;">
+          <strong>Hinweis:</strong> Der Beitrag wird einmal jährlich per SEPA-Lastschrift von Ihrem Konto eingezogen. Eine Spendenquittung über den Betrag wird Ihnen auf Wunsch ausgestellt – die Freiwillige Feuerwehr Lorsbach e.V. ist als gemeinnützig anerkannt.
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="button" class="btn btn-secondary" data-action="prev">← Zurück</button>
+        <button type="button" class="btn btn-primary" data-action="next">Weiter →</button>
+      </div>
+    </section>
+
+    <!-- ===================== STEP 3 ===================== -->
+    <section class="step" data-step="3">
+      <div class="card-header">
+        <h2>3. SEPA-Lastschriftmandat</h2>
+        <p>Bitte geben Sie Ihre Bankverbindung an, von der der Beitrag eingezogen werden soll.</p>
+      </div>
+      <div class="card-body">
+        <div class="field-grid">
+          <div class="field full">
+            <label for="kontoinhaber">Name des Kontoinhabers <span class="req">*</span></label>
+            <input type="text" id="kontoinhaber" name="kontoinhaber" autocomplete="cc-name" required maxlength="100" />
+            <span class="hint">Falls abweichend vom Antragsteller.</span>
+            <span class="error-msg">Bitte geben Sie den Namen des Kontoinhabers an.</span>
+          </div>
+          <div class="field full">
+            <label for="iban">IBAN <span class="req">*</span></label>
+            <input type="text" id="iban" name="iban" class="iban" required maxlength="34" placeholder="DE__ ____ ____ ____ ____ __" autocomplete="off" />
+            <span class="hint">Deutsche IBAN, 22 Zeichen. Leerzeichen werden automatisch eingefügt.</span>
+            <span class="error-msg">Bitte geben Sie eine gültige IBAN an.</span>
+          </div>
+        </div>
+
+        <details class="legal-collapse">
+          <summary>SEPA-Mandatstext anzeigen</summary>
+          <div class="content">
+            <p><strong>Zahlungsempfänger:</strong><br>
+            Freiwillige Feuerwehr Lorsbach e.V.<br>
+            Im Lorsbachtal 13, 65719 Hofheim am Taunus<br>
+            <strong>Gläubiger-Identifikationsnummer:</strong> DE35ZZZ00000281997<br>
+            <strong>Mandatsreferenz:</strong> wird separat mitgeteilt</p>
+            <p>Ich ermächtige die Freiwillige Feuerwehr Lorsbach e.V., Zahlungen von meinem Konto mittels Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, die von der Freiwilligen Feuerwehr Lorsbach e.V. auf mein Konto gezogenen Lastschriften einzulösen.</p>
+            <p><strong>Hinweis:</strong> Ich kann innerhalb von acht Wochen, beginnend mit dem Belastungsdatum, die Erstattung des belasteten Betrages verlangen. Es gelten dabei die mit meinem Kreditinstitut vereinbarten Bedingungen.</p>
+            <p><strong>Zahlungsart:</strong> Wiederkehrende Zahlung</p>
+          </div>
+        </details>
+      </div>
+      <div class="card-footer">
+        <button type="button" class="btn btn-secondary" data-action="prev">← Zurück</button>
+        <button type="button" class="btn btn-primary" data-action="next">Weiter →</button>
+      </div>
+    </section>
+
+    <!-- ===================== STEP 4 ===================== -->
+    <section class="step" data-step="4">
+      <div class="card-header">
+        <h2>4. Datenschutz & Einwilligungen</h2>
+        <p>Bitte bestätigen Sie die folgenden Punkte. Ohne diese Einwilligungen kann der Antrag nicht bearbeitet werden.</p>
+      </div>
+      <div class="card-body">
+
+        <details class="legal-collapse" open>
+          <summary>Datenschutzerklärung der Freiwilligen Feuerwehr Lorsbach e.V. anzeigen</summary>
+          <div class="content">
+            <p>Unter Beachtung der gesetzlichen Vorgaben und Bestimmungen der EU-Datenschutzgrundverordnung (DSGVO) und des Bundesdatenschutzgesetzes (BDSG) werden zur Erfüllung der Zwecke und Aufgaben des Vereins personenbezogene Daten über persönliche und sachliche Verhältnisse der Mitglieder des Vereins erhoben und in den vereinseigenen EDV-Systemen gespeichert, genutzt und verarbeitet.</p>
+
+            <h4>Verantwortliche Stelle</h4>
+            <p>Verantwortliche Stelle im Sinne des § 3 (7) BDSG bzw. Art. 4 lit. 7 DSGVO ist der Vorstand der Freiwilligen Feuerwehr Lorsbach e.V. im Sinne von § 26 BGB (Vorsitzender, stellvertretender Vorsitzender, Rechnungsführer, Schriftführer).</p>
+            <p>
+              Freiwillige Feuerwehr Lorsbach e.V.<br>
+              Im Lorsbachtal 13<br>
+              65719 Hofheim<br>
+              Telefon: 06192 / 9869957<br>
+              E-Mail: <a href="mailto:verein@feuerwehr-lorsbach.de">verein@feuerwehr-lorsbach.de</a>
+            </p>
+
+            <h4>Erhebung und Verwendung</h4>
+            <p>Mit dem Beitritt des Mitglieds nimmt der Verein alle für die Mitgliedschaft im Verein relevanten Daten (Name, Anschrift, Geburtsdatum, Bankverbindung) auf. Weitere vom EDV-System erfasste Daten sind eine Mitgliedsnummer, Datum des Beitrittes und zugehörige Abteilung (z.B. förderndes Mitglied). Diese Daten sind im Sinne von Art. 6 Nr. 1 lit. b und c DSGVO notwendig, um die Mitgliedschaft zu verwalten (z.B. Beitragseinzug oder Ausstellung einer Spendenquittung).</p>
+            <p>Sonstige freiwillige Angaben der Mitglieder (z.B. E-Mail-Adresse) werden grundsätzlich nur verarbeitet oder genutzt, wenn sie zur Förderung des Vereinszweckes nützlich sind (z.B. Einladung zu einer Ehrung) und keine Anhaltspunkte bestehen, dass die betroffene Person ein schutzwürdiges Interesse hat, das der Verarbeitung oder Nutzung entgegensteht (Art. 6 DSGVO).</p>
+            <p>Die personenbezogenen Daten werden dabei durch geeignete technische und organisatorische Maßnahmen vor der Kenntnisnahme Dritter geschützt. Wir sichern Ihnen zu, Ihre personenbezogenen Daten vertraulich zu behandeln und nicht an Stellen außerhalb der Freiwilligen Feuerwehr Lorsbach e.V. weiterzugeben, solange dazu keine rechtliche Verpflichtung vorliegt. Eine Nutzung Ihrer personenbezogenen Daten für Werbezwecke findet nicht statt.</p>
+
+            <h4>Ihre Rechte</h4>
+            <p>Jedes Mitglied hat das Recht darauf,</p>
+            <ul>
+              <li>Auskunft über die zu seiner Person gespeicherten Daten zu erhalten,</li>
+              <li>dass die zu seiner Person gespeicherten Daten berichtigt werden, wenn sie unrichtig sind,</li>
+              <li>dass die zu seiner Person gespeicherten Daten gesperrt werden, wenn sich bei behaupteten Fehlern weder deren Richtigkeit noch deren Unrichtigkeit feststellen lässt,</li>
+              <li>dass die zu seiner Person gespeicherten Daten gelöscht werden, wenn die Speicherung unzulässig war oder die Zwecke, für die sie erhoben und gespeichert wurden, nicht mehr notwendig sind,</li>
+              <li>der Verarbeitung seiner personenbezogenen Daten zu widersprechen,</li>
+              <li>seine Daten in einem strukturierten, gängigen Format zu erhalten.</li>
+            </ul>
+
+            <h4>Pflichten und Beschwerderecht</h4>
+            <p>Jedes Mitglied hat die Pflicht, der Freiwilligen Feuerwehr Lorsbach e.V. eine Änderung der für die Mitgliedschaft relevanten Daten (Name, Anschrift, Bankverbindung) unaufgefordert mitzuteilen.</p>
+            <p>Nach einer Beendigung der Mitgliedschaft werden Ihre personenbezogenen Daten gelöscht, soweit sie nicht entsprechend rechtlicher Vorgaben aufbewahrt werden müssen.</p>
+            <p>Unbeschadet eines anderweitigen verwaltungsrechtlichen oder gerichtlichen Rechtsbehelfs steht Ihnen das Recht auf Beschwerde bei einer Aufsichtsbehörde zu, wenn Sie der Ansicht sind, dass die Verarbeitung der Sie betreffenden personenbezogenen Daten gegen die DSGVO verstößt.</p>
+          </div>
+        </details>
+
+        <div class="check-group" style="margin-top: 8px;">
+          <label class="check">
+            <input type="checkbox" id="confirmDatenschutz" name="confirmDatenschutz" required />
+            <span><span class="req">*</span> Ich habe die <strong>Datenschutzerklärung</strong> gelesen und stimme der dort beschriebenen Erhebung und Verarbeitung meiner Daten zu.</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="confirmSepa" name="confirmSepa" required />
+            <span><span class="req">*</span> Ich erteile das <strong>SEPA-Lastschriftmandat</strong> und ermächtige die Freiwillige Feuerwehr Lorsbach e.V., den Mitgliedsbeitrag von meinem Konto einzuziehen.</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="confirmAntrag" name="confirmAntrag" required />
+            <span><span class="req">*</span> Ich beantrage hiermit die <strong>fördernde Mitgliedschaft</strong> in der Freiwilligen Feuerwehr Lorsbach e.V. und verpflichte mich zur jährlichen Zahlung des oben angegebenen Mitgliedsbeitrags. Mir ist bekannt, dass die Aufnahme erst mit Vorstandsbeschluss wirksam wird.</span>
+          </label>
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="button" class="btn btn-secondary" data-action="prev">← Zurück</button>
+        <button type="button" class="btn btn-primary" data-action="next">Weiter →</button>
+      </div>
+    </section>
+
+    <!-- ===================== STEP 5 ===================== -->
+    <section class="step" data-step="5">
+      <div class="card-header">
+        <h2>5. Zusammenfassung & Antrag drucken</h2>
+        <p>Bitte überprüfen Sie Ihre Angaben. Im nächsten Schritt erzeugen wir ein vorausgefülltes PDF zum Ausdrucken und Unterschreiben.</p>
+      </div>
+      <div class="card-body">
+        <dl class="summary-grid" id="summary"></dl>
+
+        <div class="legal-box">
+          <strong>Rechtshinweis:</strong> Für die rechtsverbindliche Mitgliedschaft und das SEPA-Lastschriftmandat ist Ihre eigenhändige Unterschrift erforderlich. Drucken Sie das PDF aus, unterschreiben Sie es und senden Sie es per Post oder eingescannt per E-Mail an den Verein zurück.
+        </div>
+      </div>
+      <div class="card-footer">
+        <button type="button" class="btn btn-secondary" data-action="prev">← Zurück</button>
+        <button type="button" id="generatePdfBtn" class="btn btn-success">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 8V3.5L18.5 9H13z"/></svg>
+          Antrag als PDF erstellen
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== SUCCESS ===================== -->
+    <section class="step" data-step="6">
+      <div class="card-body success-state">
+        <div class="success-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <h2>Antrag erstellt!</h2>
+        <p class="lead">Ihr Mitgliedsantrag wurde als PDF generiert und der Download wurde gestartet. Vielen Dank für Ihre Unterstützung der Freiwilligen Feuerwehr Lorsbach e.V.!</p>
+
+        <button type="button" id="downloadAgain" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18-5 5h3v6h4v-6h3l-5-5z" transform="rotate(180 12 12)"/></svg>
+          PDF erneut herunterladen
+        </button>
+
+        <div class="next-steps">
+          <h3>So geht es weiter:</h3>
+          <ol>
+            <li><strong>PDF ausdrucken</strong> – das Dokument enthält bereits alle Ihre Angaben.</li>
+            <li><strong>Antrag und SEPA-Mandat unterschreiben</strong> – beide Unterschriftenfelder.</li>
+            <li><strong>Zurücksenden</strong> – per Post oder eingescannt per E-Mail an den Verein.</li>
+          </ol>
+        </div>
+
+        <div class="contact-block">
+          <strong>Freiwillige Feuerwehr Lorsbach e.V.</strong><br>
+          Im Lorsbachtal 13<br>
+          65719 Hofheim am Taunus<br>
+          E-Mail: <a href="mailto:verein@feuerwehr-lorsbach.de">verein@feuerwehr-lorsbach.de</a><br>
+          Telefon: 06192 / 9869957
+        </div>
+
+        <p style="margin-top: 24px; font-size: 13px; color: var(--fw-grey-500);">
+          Sobald der Antrag bei uns eingegangen ist, wird der Vorstand über die Aufnahme entscheiden. Sie erhalten anschließend eine Bestätigung mit Ihrer Mitgliedsnummer.
+        </p>
+      </div>
+    </section>
+
+  </form>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <strong>Freiwillige Feuerwehr Lorsbach e.V.</strong> · Im Lorsbachtal 13 · 65719 Hofheim am Taunus<br>
+    <a href="mailto:verein@feuerwehr-lorsbach.de">verein@feuerwehr-lorsbach.de</a> · Tel. 06192 / 9869957 ·
+    <a href="https://www.feuerwehr-lorsbach.de" target="_blank" rel="noopener">www.feuerwehr-lorsbach.de</a>
+    <div class="footer-meta">Gläubiger-Identifikationsnummer: DE35ZZZ00000281997</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- STATE ----------
+  let currentStep = 1;
+  const totalSteps = 5;
+  const form = document.getElementById('antragForm');
+
+  // ---------- NAVIGATION ----------
+  function showStep(n) {
+    document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+    const target = document.querySelector(`.step[data-step="${n}"]`);
+    if (target) target.classList.add('active');
+
+    document.querySelectorAll('.step-indicator').forEach(el => {
+      const s = parseInt(el.dataset.step, 10);
+      el.classList.toggle('active', s === n);
+      el.classList.toggle('done', s < n);
+    });
+
+    currentStep = n;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.querySelectorAll('[data-action="next"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (validateStep(currentStep)) {
+        if (currentStep === 4) updateSummary();
+        showStep(currentStep + 1);
+      }
+    });
+  });
+  document.querySelectorAll('[data-action="prev"]').forEach(btn => {
+    btn.addEventListener('click', () => showStep(currentStep - 1));
+  });
+
+  // ---------- VALIDATION ----------
+  function setError(input, hasError) {
+    input.setAttribute('aria-invalid', hasError ? 'true' : 'false');
+  }
+
+  function validateStep(step) {
+    const stepEl = document.querySelector(`.step[data-step="${step}"]`);
+    if (!stepEl) return true;
+
+    const inputs = stepEl.querySelectorAll('input[required]');
+    let ok = true;
+    let firstInvalid = null;
+
+    inputs.forEach(input => {
+      const valid = isValid(input);
+      setError(input, !valid);
+      if (!valid && !firstInvalid) firstInvalid = input;
+      if (!valid) ok = false;
+    });
+
+    // Step 4 — checkboxes
+    if (step === 4) {
+      const required = stepEl.querySelectorAll('input[type="checkbox"][required]');
+      required.forEach(cb => {
+        const label = cb.closest('.check');
+        if (!cb.checked) {
+          ok = false;
+          if (label) label.style.borderColor = 'var(--fw-error)';
+          if (!firstInvalid) firstInvalid = cb;
+        } else if (label) {
+          label.style.borderColor = '';
+        }
+      });
+    }
+
+    if (!ok && firstInvalid) firstInvalid.focus();
+    return ok;
+  }
+
+  function isValid(input) {
+    const v = input.value.trim();
+    if (!v) return false;
+
+    if (input.id === 'email' && v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    }
+    if (input.id === 'plz') {
+      return /^\d{5}$/.test(v);
+    }
+    if (input.id === 'geburtsdatum') {
+      const d = new Date(v);
+      if (isNaN(d)) return false;
+      const now = new Date();
+      if (d > now) return false;
+      // realistic age range
+      if (d.getFullYear() < 1900) return false;
+      return true;
+    }
+    if (input.id === 'beitrag') {
+      const n = parseFloat(v);
+      return !isNaN(n) && n >= 10;
+    }
+    if (input.id === 'iban') {
+      return isValidIBAN(v);
+    }
+    return true;
+  }
+
+  // Live updates
+  document.querySelectorAll('#antragForm input').forEach(input => {
+    input.addEventListener('input', () => {
+      if (input.getAttribute('aria-invalid') === 'true') {
+        setError(input, !isValid(input));
+      }
+    });
+    if (input.type === 'checkbox') {
+      input.addEventListener('change', () => {
+        const label = input.closest('.check');
+        if (label) {
+          label.classList.toggle('checked', input.checked);
+          if (input.checked) label.style.borderColor = '';
+        }
+      });
+    }
+  });
+
+  // Email validation only when filled
+  document.getElementById('email').addEventListener('blur', e => {
+    const v = e.target.value.trim();
+    if (!v) { setError(e.target, false); return; }
+    setError(e.target, !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
+  });
+  // Email is optional but if filled, must be valid
+  const emailInput = document.getElementById('email');
+  emailInput.removeAttribute('required');
+  const originalValidateStep = validateStep;
+
+  // ---------- IBAN HANDLING ----------
+  const ibanInput = document.getElementById('iban');
+  ibanInput.addEventListener('input', e => {
+    let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (raw.length > 34) raw = raw.slice(0, 34);
+    // Format as groups of 4
+    const formatted = raw.replace(/(.{4})/g, '$1 ').trim();
+    e.target.value = formatted;
+  });
+
+  function isValidIBAN(iban) {
+    const cleaned = iban.replace(/\s+/g, '').toUpperCase();
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(cleaned)) return false;
+    if (cleaned.length < 15 || cleaned.length > 34) return false;
+    // German IBAN check (most common case)
+    if (cleaned.startsWith('DE') && cleaned.length !== 22) return false;
+    // mod-97
+    const rearranged = cleaned.slice(4) + cleaned.slice(0, 4);
+    let numeric = '';
+    for (const ch of rearranged) {
+      if (ch >= '0' && ch <= '9') numeric += ch;
+      else numeric += (ch.charCodeAt(0) - 55).toString();
+    }
+    // big mod 97 chunkwise
+    let remainder = 0;
+    for (let i = 0; i < numeric.length; i += 7) {
+      const block = remainder.toString() + numeric.slice(i, i + 7);
+      remainder = parseInt(block, 10) % 97;
+    }
+    return remainder === 1;
+  }
+
+  // ---------- BEITRAG QUICK BUTTONS ----------
+  document.querySelectorAll('.amount-quick button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const amount = btn.dataset.amount;
+      document.getElementById('beitrag').value = amount;
+      document.querySelectorAll('.amount-quick button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setError(document.getElementById('beitrag'), false);
+    });
+  });
+  document.getElementById('beitrag').addEventListener('input', () => {
+    document.querySelectorAll('.amount-quick button').forEach(b => b.classList.remove('active'));
+  });
+
+  // ---------- SUMMARY ----------
+  function formatDateDe(d) {
+    if (!d) return '';
+    const [y, m, day] = d.split('-');
+    return `${day}.${m}.${y}`;
+  }
+
+  function gatherData() {
+    return {
+      vorname: document.getElementById('vorname').value.trim(),
+      nachname: document.getElementById('nachname').value.trim(),
+      geburtsdatum: document.getElementById('geburtsdatum').value,
+      email: document.getElementById('email').value.trim(),
+      strasse: document.getElementById('strasse').value.trim(),
+      plz: document.getElementById('plz').value.trim(),
+      ort: document.getElementById('ort').value.trim(),
+      beitrag: parseFloat(document.getElementById('beitrag').value),
+      kontoinhaber: document.getElementById('kontoinhaber').value.trim(),
+      iban: document.getElementById('iban').value.trim().toUpperCase()
+    };
+  }
+
+  function updateSummary() {
+    const d = gatherData();
+    const summary = document.getElementById('summary');
+    const rows = [
+      ['Name', `${d.vorname} ${d.nachname}`],
+      ['Geburtsdatum', formatDateDe(d.geburtsdatum)],
+      ['Anschrift', `${d.strasse}, ${d.plz} ${d.ort}`],
+      ['E-Mail', d.email || '— (nicht angegeben)'],
+      ['Jährlicher Beitrag', `${d.beitrag.toFixed(2).replace('.', ',')} €`],
+      ['Kontoinhaber', d.kontoinhaber],
+      ['IBAN', d.iban]
+    ];
+    summary.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${escapeHtml(v)}</dd>`).join('');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // ---------- PDF GENERATION ----------
+  function generatePdf() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const d = gatherData();
+    const todayDe = new Date().toLocaleDateString('de-DE');
+    const ort = d.ort || '____________';
+
+    const pageW = 210;
+    const margin = 18;
+    const contentW = pageW - 2 * margin;
+    let y = 18;
+
+    // ---- HEADER ----
+    // Red bar at top
+    doc.setFillColor(200, 16, 46);
+    doc.rect(0, 0, pageW, 4, 'F');
+
+    // Logo placeholder (left)
+    doc.setFillColor(200, 16, 46);
+    doc.circle(margin + 8, y + 6, 7, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('FFL', margin + 8, y + 8, { align: 'center' });
+
+    // Title
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('ANTRAG AUF MITGLIEDSCHAFT', pageW / 2, y + 4, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, y + 11, { align: 'center' });
+
+    y += 22;
+    doc.setDrawColor(200, 16, 46);
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+    y += 8;
+
+    // ---- INTRO TEXT ----
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10.5);
+    const introText = `Ich möchte förderndes Mitglied der Freiwilligen Feuerwehr Lorsbach e.V. werden und verpflichte mich hiermit zur jährlichen Zahlung des Mitgliedsbeitrags in Höhe von`;
+    const introLines = doc.splitTextToSize(introText, contentW);
+    doc.text(introLines, margin, y);
+    y += introLines.length * 5 + 2;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text(`${d.beitrag.toFixed(2).replace('.', ',')} Euro`, margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10.5);
+    doc.text('(Mindestmitgliedsbeitrag 10 Euro pro Jahr) per Lastschriftmandat.', margin + 32, y);
+    y += 8;
+
+    // ---- PERSONAL DATA TABLE ----
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.text('Persönliche Daten:', margin, y);
+    y += 5;
+
+    const tableRows = [
+      [['Vorname und Name', `${d.vorname} ${d.nachname}`], ['Straße und Hausnummer', d.strasse]],
+      [['Geburtsdatum', formatDateDe(d.geburtsdatum)], ['Postleitzahl und Ort', `${d.plz} ${d.ort}`]],
+      [['E-Mail-Adresse (optional)', d.email || '']]
+    ];
+    const colW = contentW / 2;
+    const rowH = 12;
+
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.2);
+
+    tableRows.forEach((row, idx) => {
+      const isFull = row.length === 1;
+      row.forEach((cell, cidx) => {
+        const x = margin + (isFull ? 0 : cidx * colW);
+        const w = isFull ? contentW : colW;
+        doc.rect(x, y, w, rowH);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        doc.text(cell[0], x + 2, y + 3.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        const val = doc.splitTextToSize(cell[1] || '', w - 4);
+        doc.text(val[0] || '', x + 2, y + 9);
+      });
+      y += rowH;
+    });
+
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Ich habe die rückseitige Datenschutzerklärung gelesen und stimme ihr zu.', margin, y);
+    y += 12;
+
+    // Signature line
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, margin + 90, y);
+    y += 4;
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`${ort}, ${todayDe} – Unterschrift`, margin, y);
+    y += 4;
+    doc.text('(ggf. Unterschrift des gesetzlichen Vertreters)', margin, y);
+
+    y += 10;
+    // ---- SEPA SECTION ----
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, y, contentW, 7, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(200, 16, 46);
+    doc.text('SEPA-Lastschriftmandat', margin + 2, y + 5);
+    y += 11;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Freiwillige Feuerwehr Lorsbach e.V., Im Lorsbachtal 13, 65719 Hofheim am Taunus', margin, y);
+    y += 4.5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Gläubiger-Identifikationsnummer: DE35ZZZ00000281997', margin, y);
+    y += 4;
+    doc.text('Mandatsreferenz: wird separat mitgeteilt', margin, y);
+    y += 5;
+
+    const sepaText = 'Ich ermächtige die Freiwillige Feuerwehr Lorsbach e.V., Zahlungen von meinem Konto mittels Lastschrift einzuziehen. Zugleich weise ich mein Kreditinstitut an, die von der Freiwilligen Feuerwehr Lorsbach e.V. auf mein Konto gezogenen Lastschriften einzulösen. Hinweis: Ich kann innerhalb von acht Wochen, beginnend mit dem Belastungsdatum, die Erstattung des belasteten Betrages verlangen. Es gelten dabei die mit meinem Kreditinstitut vereinbarten Bedingungen.';
+    const sepaLines = doc.splitTextToSize(sepaText, contentW);
+    doc.text(sepaLines, margin, y);
+    y += sepaLines.length * 4 + 2;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Zahlungsart: Wiederkehrende Zahlung', margin, y);
+    y += 7;
+
+    // Kontoinhaber
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Kontoinhaber:', margin, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(d.kontoinhaber, margin + 22, y);
+    y += 6;
+
+    // IBAN
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text('IBAN:', margin, y);
+    doc.setFont('courier', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(d.iban, margin + 22, y);
+    y += 10;
+
+    // Signature line for SEPA
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, margin + 90, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`${ort}, ${todayDe} – Unterschrift des Kontoinhabers`, margin, y);
+
+    y += 12;
+    // Vorstandsfeld
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.2);
+    const boxW = contentW / 2 - 2;
+    doc.rect(margin, y, boxW, 14);
+    doc.rect(margin + boxW + 4, y, boxW, 14);
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Aufnahme durch Vorstandsbeschluss am:', margin + 2, y + 4);
+    doc.text('Datum, Unterschrift des 1. Vorsitzenden', margin + boxW + 6, y + 4);
+
+    // ---------- PAGE 2 — DATENSCHUTZ ----------
+    doc.addPage();
+    let y2 = 20;
+    doc.setFillColor(200, 16, 46);
+    doc.rect(0, 0, pageW, 4, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Datenschutzerklärung', pageW / 2, y2, { align: 'center' });
+    y2 += 4;
+    doc.setDrawColor(200, 16, 46);
+    doc.line(pageW / 2 - 25, y2, pageW / 2 + 25, y2);
+    y2 += 8;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(40, 40, 40);
+
+    const dsParas = [
+      'Unter Beachtung der gesetzlichen Vorgaben und Bestimmungen der EU-Datenschutzgrundverordnung (DSGVO) und des Bundesdatenschutzgesetzes (BDSG) werden zur Erfüllung der Zwecke und Aufgaben des Vereins personenbezogene Daten über persönliche und sachliche Verhältnisse der Mitglieder des Vereins erhoben und in den vereinseigenen EDV-Systemen gespeichert, genutzt und verarbeitet.',
+      'Verantwortliche Stelle im Sinne des § 3 (7) BDSG bzw. Art. 4 lit. 7 DSGVO ist der Vorstand der Freiwilligen Feuerwehr Lorsbach e.V. im Sinne von § 26 BGB (Vorsitzender, stellvertretender Vorsitzender, Rechnungsführer, Schriftführer).',
+      'Freiwillige Feuerwehr Lorsbach e.V.\nIm Lorsbachtal 13\n65719 Hofheim\nTelefon: 06192 / 9869957\nE-Mail: verein@feuerwehr-lorsbach.de',
+      'Mit dem Beitritt des Mitglieds nimmt der Verein alle für die Mitgliedschaft im Verein relevanten Daten (Name, Anschrift, Geburtsdatum, Bankverbindung) auf. Weitere vom EDV-System erfasste Daten sind eine Mitgliedsnummer, Datum des Beitrittes und zugehörige Abteilung (z.B. förderndes Mitglied). Diese Daten sind im Sinne von Art. 6 Nr. 1 lit. b und c DSGVO notwendig, um die Mitgliedschaft zu verwalten (z.B. Beitragseinzug oder Ausstellung einer Spendenquittung).',
+      'Sonstige freiwillige Angaben der Mitglieder (z.B. E-Mail-Adresse) werden grundsätzlich nur verarbeitet oder genutzt, wenn sie zur Förderung des Vereinszweckes nützlich sind (z.B. Einladung zu einer Ehrung) und keine Anhaltspunkte bestehen, dass die betroffene Person ein schutzwürdiges Interesse hat, das der Verarbeitung oder Nutzung entgegensteht (Art. 6 DSGVO).',
+      'Die personenbezogenen Daten werden dabei durch geeignete technische und organisatorische Maßnahmen vor der Kenntnisnahme Dritter geschützt. Wir sichern Ihnen zu, Ihre personenbezogenen Daten vertraulich zu behandeln und nicht an Stellen außerhalb der Freiwilligen Feuerwehr Lorsbach e.V. weiterzugeben, solange dazu keine rechtliche Verpflichtung vorliegt. Eine Nutzung Ihrer personenbezogenen Daten für Werbezwecke findet nicht statt.',
+      'Jedes Mitglied hat das Recht darauf,'
+    ];
+    dsParas.forEach(p => {
+      const lines = doc.splitTextToSize(p, contentW);
+      doc.text(lines, margin, y2);
+      y2 += lines.length * 4.2 + 2;
+    });
+
+    const rights = [
+      'Auskunft über die zu seiner Person gespeicherten Daten zu erhalten,',
+      'dass die zu seiner Person gespeicherten Daten berichtigt werden, wenn sie unrichtig sind,',
+      'dass die zu seiner Person gespeicherten Daten gesperrt werden, wenn sich bei behaupteten Fehlern weder deren Richtigkeit noch deren Unrichtigkeit feststellen lässt,',
+      'dass die zu seiner Person gespeicherten Daten gelöscht werden, wenn die Speicherung unzulässig war oder die Zwecke, für die sie erhoben und gespeichert wurden, nicht mehr notwendig sind,',
+      'der Verarbeitung seiner personenbezogenen Daten zu widersprechen,',
+      'seine Daten in einem strukturierten, gängigen Format zu erhalten.'
+    ];
+    rights.forEach(r => {
+      const lines = doc.splitTextToSize('• ' + r, contentW - 4);
+      doc.text(lines, margin + 4, y2);
+      y2 += lines.length * 4.2 + 1;
+    });
+
+    y2 += 2;
+    const lastParas = [
+      'Jedes Mitglied hat die Pflicht, der Freiwilligen Feuerwehr Lorsbach e.V. eine Änderung der für die Mitgliedschaft relevanten Daten (Name, Anschrift, Bankverbindung) unaufgefordert mitzuteilen.',
+      'Nach einer Beendigung der Mitgliedschaft werden Ihre personenbezogenen Daten gelöscht, soweit sie nicht entsprechend rechtlicher Vorgaben aufbewahrt werden müssen.',
+      'Unbeschadet eines anderweitigen verwaltungsrechtlichen oder gerichtlichen Rechtsbehelfs steht Ihnen das Recht auf Beschwerde bei einer Aufsichtsbehörde zu, wenn Sie der Ansicht sind, dass die Verarbeitung der Sie betreffenden personenbezogenen Daten gegen die DSGVO verstößt.'
+    ];
+    lastParas.forEach(p => {
+      const lines = doc.splitTextToSize(p, contentW);
+      doc.text(lines, margin, y2);
+      y2 += lines.length * 4.2 + 2;
+    });
+
+    // Save
+    const filename = `Mitgliedsantrag_FFL_${d.nachname.replace(/[^a-zA-Z0-9äöüÄÖÜß-]/g, '')}_${d.vorname.replace(/[^a-zA-Z0-9äöüÄÖÜß-]/g, '')}.pdf`;
+    doc.save(filename);
+  }
+
+  // ---------- GENERATE BUTTON ----------
+  document.getElementById('generatePdfBtn').addEventListener('click', () => {
+    // Re-validate everything
+    let allOk = true;
+    for (let s = 1; s <= 4; s++) {
+      if (!originalValidateStep(s)) { allOk = false; break; }
+    }
+    if (!allOk) {
+      alert('Bitte überprüfen Sie Ihre Angaben – einige Felder sind unvollständig.');
+      return;
+    }
+    try {
+      generatePdf();
+      showStep(6);
+    } catch (err) {
+      console.error(err);
+      alert('Beim Erstellen des PDF ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu und versuchen Sie es erneut.');
+    }
+  });
+
+  document.getElementById('downloadAgain').addEventListener('click', () => {
+    try { generatePdf(); } catch (e) { console.error(e); }
+  });
+
+  // ---------- PREVENT FORM SUBMIT ----------
+  form.addEventListener('submit', e => e.preventDefault());
+
+  // ---------- INIT ----------
+  showStep(1);
+})();
+</script>
+</body>
+</html>
