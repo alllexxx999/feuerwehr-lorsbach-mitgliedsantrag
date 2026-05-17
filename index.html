@@ -585,6 +585,139 @@
   }
   .contact-block strong { color: var(--fw-red); }
 
+  /* Email-Panel (Step 6 — explicit action) */
+  .email-panel {
+    background: #eef5ff;
+    border: 2px solid #1976d2;
+    border-radius: var(--radius-md);
+    padding: 22px 24px;
+    margin: 24px auto;
+    max-width: 600px;
+    text-align: left;
+    box-shadow: 0 4px 14px rgba(25, 118, 210, 0.18);
+  }
+  .email-panel-header {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .email-panel-header .icon {
+    color: #1976d2;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: #d9ecff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .email-panel-header h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--fw-black);
+    font-family: 'Roboto Condensed', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .email-panel-header p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--fw-grey-700);
+    line-height: 1.5;
+  }
+  #openMailBtn {
+    background: #1976d2;
+    color: var(--fw-white);
+    width: 100%;
+    justify-content: center;
+    font-size: 15px;
+    padding: 14px 24px;
+    border: none;
+  }
+  #openMailBtn:hover { background: #115293; }
+  #openMailBtn.sent {
+    background: var(--fw-success);
+  }
+  .email-fallback {
+    margin-top: 14px;
+    font-size: 13px;
+  }
+  .email-fallback > summary {
+    cursor: pointer;
+    color: var(--fw-grey-700);
+    padding: 6px 0;
+    font-weight: 500;
+    list-style: none;
+    user-select: none;
+  }
+  .email-fallback > summary::before {
+    content: '▸ ';
+    transition: transform 0.15s;
+    display: inline-block;
+  }
+  .email-fallback[open] > summary::before {
+    content: '▾ ';
+  }
+  .email-fallback > summary:hover { color: var(--fw-black); }
+  .fallback-content {
+    background: var(--fw-white);
+    border: 1px solid #cce4f5;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .fallback-field { display: flex; flex-direction: column; gap: 6px; }
+  .fallback-field-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .fallback-field-head .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fw-grey-700);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .fallback-field code,
+  .fallback-field pre {
+    background: var(--fw-grey-50);
+    padding: 8px 10px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-family: 'Roboto Mono', 'Consolas', monospace;
+    word-break: break-word;
+    white-space: pre-wrap;
+    margin: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    color: var(--fw-grey-900);
+  }
+  .copy-btn {
+    font-size: 12px;
+    padding: 5px 12px;
+    background: var(--fw-grey-100);
+    border: 1px solid var(--fw-grey-300);
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--fw-grey-900);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .copy-btn:hover { background: #1976d2; color: var(--fw-white); border-color: #1976d2; }
+  .copy-btn.copied { background: var(--fw-success) !important; color: var(--fw-white) !important; border-color: var(--fw-success) !important; }
+  @media (max-width: 480px) {
+    .email-panel { padding: 18px 16px; }
+    .email-panel-header { flex-direction: column; gap: 8px; }
+  }
+
   /* Email-announcement checkbox (Step 5) */
   .check.email-check {
     border-left: 4px solid #1976d2;
@@ -940,6 +1073,49 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18-5 5h3v6h4v-6h3l-5-5z" transform="rotate(180 12 12)"/></svg>
           PDF erneut herunterladen
         </button>
+
+        <div class="email-panel" id="emailPanel" style="display: none;">
+          <div class="email-panel-header">
+            <div class="icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </div>
+            <div>
+              <h3>Vorankündigung an den Vorstand</h3>
+              <p>Sie haben gewählt, den Vorstand vorab zu informieren. Klicken Sie unten, um Ihr E-Mail-Programm mit dem vorbereiteten Text zu öffnen.</p>
+            </div>
+          </div>
+          <button type="button" id="openMailBtn" class="btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            E-Mail-Programm jetzt öffnen
+          </button>
+
+          <details class="email-fallback">
+            <summary>E-Mail-Programm öffnet sich nicht? Inhalte manuell kopieren</summary>
+            <div class="fallback-content">
+              <div class="fallback-field">
+                <div class="fallback-field-head">
+                  <span class="label">Empfänger</span>
+                  <button type="button" class="copy-btn" data-copy="recipient">Kopieren</button>
+                </div>
+                <code>verein@feuerwehr-lorsbach.de</code>
+              </div>
+              <div class="fallback-field">
+                <div class="fallback-field-head">
+                  <span class="label">Betreff</span>
+                  <button type="button" class="copy-btn" data-copy="subject">Kopieren</button>
+                </div>
+                <code id="emailSubjectPreview"></code>
+              </div>
+              <div class="fallback-field">
+                <div class="fallback-field-head">
+                  <span class="label">Nachrichtentext</span>
+                  <button type="button" class="copy-btn" data-copy="body">Text kopieren</button>
+                </div>
+                <pre id="emailBodyPreview"></pre>
+              </div>
+            </div>
+          </details>
+        </div>
 
         <div class="next-steps">
           <h3>So geht es weiter:</h3>
@@ -1692,16 +1868,18 @@
       const successLead = document.getElementById('successLead');
       if (successLead) {
         successLead.textContent = wantsEmail
-          ? 'Ihr Mitgliedsantrag wurde als PDF erstellt und der Download wurde gestartet. Zusätzlich wurde Ihr E-Mail-Programm mit einer Ankündigung an den Vorstand geöffnet. Vielen Dank für Ihre Unterstützung!'
+          ? 'Ihr Mitgliedsantrag wurde als PDF erstellt und der Download wurde gestartet. Unten finden Sie die vorbereitete E-Mail-Ankündigung an den Vorstand – ein Klick öffnet Ihr E-Mail-Programm.'
           : 'Ihr Mitgliedsantrag wurde als PDF generiert und der Download wurde gestartet. Vielen Dank für Ihre Unterstützung der Freiwilligen Feuerwehr Lorsbach e.V.!';
       }
 
-      showStep(6);
-
-      // Trigger mailto AFTER showing success — gives PDF a moment to start downloading
-      if (wantsEmail) {
-        setTimeout(triggerAnnouncementEmail, 350);
+      // Show the email panel (if opted in) BEFORE showing step 6
+      const emailPanel = document.getElementById('emailPanel');
+      if (emailPanel) {
+        emailPanel.style.display = wantsEmail ? 'block' : 'none';
+        if (wantsEmail) populateEmailPreview();
       }
+
+      showStep(6);
     } catch (err) {
       console.error(err);
       alert('Beim Erstellen des PDF ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu und versuchen Sie es erneut.');
@@ -1718,21 +1896,17 @@
     } catch (e) { console.error(e); }
   });
 
-  // ---------- EMAIL ANNOUNCEMENT (mailto) ----------
-  function triggerAnnouncementEmail() {
-    const url = buildAnnouncementMailto();
-    const a = document.createElement('a');
-    a.href = url;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  // ---------- EMAIL ANNOUNCEMENT ----------
+  const EMAIL_RECIPIENT = 'verein@feuerwehr-lorsbach.de';
+
+  function buildEmailSubject() {
+    const d = gatherData();
+    return `Ankündigung: Antrag auf fördernde Mitgliedschaft – ${d.vorname} ${d.nachname}`.trim();
   }
 
-  function buildAnnouncementMailto() {
+  function buildEmailBody() {
     const d = gatherData();
     const fullName = `${d.vorname} ${d.nachname}`.trim();
-    const subject = `Ankündigung: Antrag auf fördernde Mitgliedschaft – ${fullName}`;
     const lines = [
       'Sehr geehrter Vorstand der Freiwilligen Feuerwehr Lorsbach e.V.,',
       '',
@@ -1754,12 +1928,92 @@
     lines.push('---');
     lines.push('Diese Ankündigung wurde über das Online-Formular erstellt:');
     lines.push('https://alllexxx999.github.io/feuerwehr-lorsbach-mitgliedsantrag/');
+    return lines.join('\n');
+  }
 
-    const body = lines.join('\r\n');
-    return 'mailto:verein@feuerwehr-lorsbach.de'
+  function buildAnnouncementMailto() {
+    const subject = buildEmailSubject();
+    const body = buildEmailBody().replace(/\n/g, '\r\n');
+    return 'mailto:' + EMAIL_RECIPIENT
       + '?subject=' + encodeURIComponent(subject)
       + '&body=' + encodeURIComponent(body);
   }
+
+  function populateEmailPreview() {
+    const s = document.getElementById('emailSubjectPreview');
+    const b = document.getElementById('emailBodyPreview');
+    if (s) s.textContent = buildEmailSubject();
+    if (b) b.textContent = buildEmailBody();
+  }
+
+  // Explicit "open mail" button on success page
+  const openMailBtn = document.getElementById('openMailBtn');
+  if (openMailBtn) {
+    const originalBtnHTML = openMailBtn.innerHTML;
+    openMailBtn.addEventListener('click', () => {
+      const url = buildAnnouncementMailto();
+      // Use a real anchor element with target=_self for maximum mailto-handler compatibility
+      const a = document.createElement('a');
+      a.href = url;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // Strong visual feedback so user notices something happened
+      openMailBtn.classList.add('sent');
+      openMailBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> E-Mail-Programm geöffnet – bitte prüfen';
+      setTimeout(() => {
+        openMailBtn.classList.remove('sent');
+        openMailBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> Erneut öffnen';
+      }, 4000);
+    });
+  }
+
+  // Copy-to-clipboard for fallback fields
+  async function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(text); return true; } catch (_) {}
+    }
+    // Fallback for older browsers / insecure contexts
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  document.querySelectorAll('.copy-btn[data-copy]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const what = btn.dataset.copy;
+      let text = '';
+      if (what === 'recipient') text = EMAIL_RECIPIENT;
+      else if (what === 'subject') text = buildEmailSubject();
+      else if (what === 'body') text = buildEmailBody();
+      if (!text) return;
+
+      const ok = await copyText(text);
+      const original = btn.textContent;
+      if (ok) {
+        btn.classList.add('copied');
+        btn.textContent = '✓ Kopiert';
+      } else {
+        btn.textContent = '✗ Fehler';
+      }
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.textContent = original;
+      }, 2000);
+    });
+  });
 
 
   // ---------- PREVENT FORM SUBMIT ----------
