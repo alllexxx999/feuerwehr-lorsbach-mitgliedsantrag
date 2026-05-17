@@ -319,10 +319,62 @@
   }
 
   /* IBAN input */
+  .iban-wrap {
+    position: relative;
+  }
   .field input.iban {
-    font-family: 'Roboto Mono', monospace;
-    letter-spacing: 1px;
+    font-family: 'Roboto Mono', 'Consolas', monospace;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
+    font-weight: 600;
+    padding-right: 44px;
+  }
+  .field input.iban.valid {
+    border-color: var(--fw-success);
+    background: #f1f8f3;
+  }
+  .iban-status {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 50%;
+    pointer-events: none;
+    transition: all 0.2s ease;
+    opacity: 0;
+    color: var(--fw-white);
+  }
+  .iban-status.show { opacity: 1; }
+  .iban-status.valid {
+    background: var(--fw-success);
+    animation: pop 0.25s ease;
+  }
+  .iban-status.invalid {
+    background: var(--fw-error);
+  }
+  .iban-status.partial {
+    background: var(--fw-grey-300);
+    color: var(--fw-grey-700);
+  }
+  @keyframes pop {
+    0% { transform: translateY(-50%) scale(0.3); }
+    60% { transform: translateY(-50%) scale(1.15); }
+    100% { transform: translateY(-50%) scale(1); }
+  }
+  .field .hint.success {
+    color: var(--fw-success);
+    font-weight: 600;
+  }
+  .field .hint.warning {
+    color: #b86e00;
+    font-weight: 500;
   }
 
   /* Checkboxes */
@@ -692,9 +744,15 @@
           </div>
           <div class="field full">
             <label for="iban">IBAN <span class="req">*</span></label>
-            <input type="text" id="iban" name="iban" class="iban" required maxlength="34" placeholder="DE__ ____ ____ ____ ____ __" autocomplete="off" />
-            <span class="hint">Deutsche IBAN, 22 Zeichen. Leerzeichen werden automatisch eingefügt.</span>
-            <span class="error-msg">Bitte geben Sie eine gültige IBAN an.</span>
+            <div class="iban-wrap">
+              <input type="text" id="iban" name="iban" class="iban" required maxlength="42"
+                placeholder="DE__ ____ ____ ____ ____ __"
+                autocomplete="off" autocapitalize="characters" spellcheck="false"
+                aria-describedby="ibanHint ibanError" />
+              <span class="iban-status" id="ibanStatus" aria-hidden="true"></span>
+            </div>
+            <span class="hint" id="ibanHint">Geben Sie Ihre IBAN ein – Leerzeichen werden automatisch gesetzt.</span>
+            <span class="error-msg" id="ibanError" role="alert">Bitte geben Sie eine gültige IBAN an.</span>
           </div>
         </div>
 
@@ -911,6 +969,17 @@
       setError(input, !valid);
       if (!valid && !firstInvalid) firstInvalid = input;
       if (!valid) ok = false;
+      // Special: ensure IBAN error message is visible on submit attempt
+      if (input.id === 'iban' && !valid) {
+        if (!input.value.trim()) {
+          const errEl = document.getElementById('ibanError');
+          const hintEl = document.getElementById('ibanHint');
+          if (errEl) { errEl.textContent = 'Bitte geben Sie Ihre IBAN an.'; errEl.style.display = 'block'; }
+          if (hintEl) hintEl.style.display = 'none';
+        } else if (typeof updateIbanUI === 'function') {
+          updateIbanUI();
+        }
+      }
     });
 
     // Step 4 — checkboxes
@@ -991,35 +1060,175 @@
   const originalValidateStep = validateStep;
 
   // ---------- IBAN HANDLING ----------
-  const ibanInput = document.getElementById('iban');
-  ibanInput.addEventListener('input', e => {
-    let raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (raw.length > 34) raw = raw.slice(0, 34);
-    // Format as groups of 4
-    const formatted = raw.replace(/(.{4})/g, '$1 ').trim();
-    e.target.value = formatted;
-  });
+  // Official IBAN lengths for SEPA-Zone countries (BBAN + 4-char prefix)
+  const IBAN_LENGTHS = {
+    AD:24, AT:20, BE:16, BG:22, CH:21, CY:28, CZ:24, DE:22, DK:18, EE:20,
+    ES:24, FI:18, FR:27, GB:22, GI:23, GR:27, HR:21, HU:28, IE:22, IS:26,
+    IT:27, LI:21, LT:20, LU:20, LV:21, MC:27, MT:31, NL:18, NO:15, PL:28,
+    PT:25, RO:24, SE:24, SI:19, SK:24, SM:27, VA:22
+  };
+  const COUNTRY_NAMES = {
+    AD:'Andorra', AT:'Österreich', BE:'Belgien', BG:'Bulgarien', CH:'Schweiz',
+    CY:'Zypern', CZ:'Tschechien', DE:'Deutschland', DK:'Dänemark', EE:'Estland',
+    ES:'Spanien', FI:'Finnland', FR:'Frankreich', GB:'Vereinigtes Königreich',
+    GI:'Gibraltar', GR:'Griechenland', HR:'Kroatien', HU:'Ungarn', IE:'Irland',
+    IS:'Island', IT:'Italien', LI:'Liechtenstein', LT:'Litauen', LU:'Luxemburg',
+    LV:'Lettland', MC:'Monaco', MT:'Malta', NL:'Niederlande', NO:'Norwegen',
+    PL:'Polen', PT:'Portugal', RO:'Rumänien', SE:'Schweden', SI:'Slowenien',
+    SK:'Slowakei', SM:'San Marino', VA:'Vatikan'
+  };
+  const DEFAULT_HINT = 'Geben Sie Ihre IBAN ein – Leerzeichen werden automatisch gesetzt.';
 
-  function isValidIBAN(iban) {
-    const cleaned = iban.replace(/\s+/g, '').toUpperCase();
-    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(cleaned)) return false;
-    if (cleaned.length < 15 || cleaned.length > 34) return false;
-    // German IBAN check (most common case)
-    if (cleaned.startsWith('DE') && cleaned.length !== 22) return false;
-    // mod-97
-    const rearranged = cleaned.slice(4) + cleaned.slice(0, 4);
+  const ibanInput = document.getElementById('iban');
+  const ibanStatus = document.getElementById('ibanStatus');
+  const ibanHint = document.getElementById('ibanHint');
+  const ibanError = document.getElementById('ibanError');
+
+  function cleanIban(value) {
+    // Strip "IBAN" prefix (common when pasting), spaces, non-alphanumeric chars
+    return String(value).replace(/^\s*IBAN[:\s]*/i, '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  }
+  function formatIban(value) {
+    return value.replace(/(.{4})/g, '$1 ').trim();
+  }
+  function ibanMod97(iban) {
+    const rearranged = iban.slice(4) + iban.slice(0, 4);
     let numeric = '';
     for (const ch of rearranged) {
-      if (ch >= '0' && ch <= '9') numeric += ch;
-      else numeric += (ch.charCodeAt(0) - 55).toString();
+      numeric += (ch >= '0' && ch <= '9') ? ch : (ch.charCodeAt(0) - 55).toString();
     }
-    // big mod 97 chunkwise
     let remainder = 0;
     for (let i = 0; i < numeric.length; i += 7) {
-      const block = remainder.toString() + numeric.slice(i, i + 7);
-      remainder = parseInt(block, 10) % 97;
+      remainder = parseInt(remainder.toString() + numeric.slice(i, i + 7), 10) % 97;
     }
-    return remainder === 1;
+    return remainder;
+  }
+
+  function checkIban(value) {
+    const cleaned = cleanIban(value);
+    if (cleaned.length === 0) return { state: 'empty', country: '', message: '' };
+    if (cleaned.length === 1) {
+      return { state: 'partial', country: '', message: 'Bitte geben Sie den 2-stelligen Ländercode ein (z. B. DE).' };
+    }
+    const country = cleaned.slice(0, 2);
+    if (!/^[A-Z]{2}$/.test(country)) {
+      return { state: 'invalid', country, message: 'Die IBAN muss mit 2 Buchstaben beginnen (Ländercode, z. B. DE).' };
+    }
+    const expectedLen = IBAN_LENGTHS[country];
+    if (!expectedLen) {
+      return { state: 'invalid', country, message: `Der Ländercode "${country}" ist kein gültiges SEPA-Land.` };
+    }
+    if (cleaned.length > expectedLen) {
+      return { state: 'invalid', country, message: `Die IBAN ist zu lang (${cleaned.length}/${expectedLen} Zeichen für ${COUNTRY_NAMES[country]}).` };
+    }
+    if (cleaned.length < expectedLen) {
+      const missing = expectedLen - cleaned.length;
+      return {
+        state: 'partial',
+        country,
+        message: `Noch ${missing} ${missing === 1 ? 'Zeichen' : 'Zeichen'} – ${COUNTRY_NAMES[country]}-IBAN hat ${expectedLen} Zeichen.`
+      };
+    }
+    // Length correct — validate format & checksum
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(cleaned)) {
+      return { state: 'invalid', country, message: 'Die IBAN enthält an Position 3–4 keine Prüfziffer.' };
+    }
+    if (ibanMod97(cleaned) !== 1) {
+      return { state: 'invalid', country, message: 'Die Prüfziffer ist ungültig. Bitte überprüfen Sie die IBAN auf Tippfehler.' };
+    }
+    return { state: 'valid', country, message: `IBAN gültig (${COUNTRY_NAMES[country]}).` };
+  }
+
+  function setIbanStatus(state) {
+    ibanStatus.className = 'iban-status';
+    if (!state || state === 'empty') {
+      ibanStatus.textContent = '';
+      return;
+    }
+    ibanStatus.classList.add('show', state);
+    if (state === 'valid') ibanStatus.textContent = '✓';
+    else if (state === 'invalid') ibanStatus.textContent = '✗';
+    else if (state === 'partial') ibanStatus.textContent = '…';
+  }
+
+  function updateIbanUI() {
+    const result = checkIban(ibanInput.value);
+    setIbanStatus(result.state);
+    ibanInput.classList.toggle('valid', result.state === 'valid');
+
+    if (result.state === 'valid') {
+      ibanInput.setAttribute('aria-invalid', 'false');
+      ibanError.style.display = 'none';
+      ibanHint.textContent = '✓ ' + result.message;
+      ibanHint.className = 'hint success';
+      ibanHint.style.display = 'block';
+    } else if (result.state === 'invalid') {
+      ibanInput.setAttribute('aria-invalid', 'true');
+      ibanError.textContent = result.message;
+      ibanError.style.display = 'block';
+      ibanHint.style.display = 'none';
+    } else if (result.state === 'partial') {
+      ibanInput.setAttribute('aria-invalid', 'false');
+      ibanError.style.display = 'none';
+      ibanHint.textContent = result.message;
+      ibanHint.className = 'hint warning';
+      ibanHint.style.display = 'block';
+    } else {
+      // empty
+      ibanInput.setAttribute('aria-invalid', 'false');
+      ibanError.style.display = 'none';
+      ibanHint.textContent = DEFAULT_HINT;
+      ibanHint.className = 'hint';
+      ibanHint.style.display = 'block';
+    }
+  }
+
+  // Live formatting with caret-position preservation
+  ibanInput.addEventListener('input', e => {
+    const input = e.target;
+    const oldVal = input.value;
+    const caretPos = input.selectionStart || 0;
+    // Count alphanumeric chars before caret in old value
+    const alphaBeforeCaret = oldVal.slice(0, caretPos).replace(/[^A-Z0-9]/gi, '').length;
+
+    const cleaned = cleanIban(oldVal).slice(0, 34);
+    const formatted = formatIban(cleaned);
+
+    if (formatted !== oldVal) {
+      input.value = formatted;
+      // Restore caret to the same alphanumeric position
+      let newCaret = 0, count = 0;
+      for (let i = 0; i < formatted.length && count < alphaBeforeCaret; i++) {
+        if (/[A-Z0-9]/.test(formatted[i])) count++;
+        newCaret = i + 1;
+      }
+      try { input.setSelectionRange(newCaret, newCaret); } catch (_) {}
+    }
+    updateIbanUI();
+  });
+
+  // Intelligent paste: clean, format, validate
+  ibanInput.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text');
+    const cleaned = cleanIban(text).slice(0, 34);
+    ibanInput.value = formatIban(cleaned);
+    updateIbanUI();
+    try { ibanInput.setSelectionRange(ibanInput.value.length, ibanInput.value.length); } catch (_) {}
+  });
+
+  // Defensive: ensure default hint on blur if empty
+  ibanInput.addEventListener('blur', () => {
+    if (!ibanInput.value.trim()) {
+      ibanHint.textContent = DEFAULT_HINT;
+      ibanHint.className = 'hint';
+      ibanHint.style.display = 'block';
+      ibanError.style.display = 'none';
+    }
+  });
+
+  function isValidIBAN(value) {
+    return checkIban(value).state === 'valid';
   }
 
   // ---------- BEITRAG QUICK BUTTONS ----------
