@@ -19,8 +19,8 @@ Einfach `index.html` im Browser öffnen. Keine Build-Schritte erforderlich.
 ## Workflow für Antragsteller
 
 1. Online ausfüllen (~2 Minuten)
-2. PDF wird automatisch heruntergeladen
-3. PDF an zwei Stellen unterschreiben (Antrag + SEPA-Mandat)
+2. PDF öffnet sich in einem neuen Browser-Tab zur Ansicht
+3. PDF ausdrucken und an zwei Stellen unterschreiben (Antrag + SEPA-Mandat)
 4. Per Post oder als Scan per E-Mail an den Verein senden
 
 ## Kontakt
