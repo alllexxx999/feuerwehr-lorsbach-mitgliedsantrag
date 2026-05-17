@@ -584,57 +584,39 @@
   }
   .contact-block strong { color: var(--fw-red); }
 
-  /* Email announcement option */
-  .email-option {
-    background: #eef5ff;
+  /* Email-announcement checkbox (Step 5) */
+  .check.email-check {
     border-left: 4px solid #1976d2;
-    padding: 18px 22px;
-    border-radius: var(--radius-sm);
-    margin: 24px auto;
-    max-width: 600px;
-    text-align: left;
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
+    margin-top: 18px;
+    background: #f5f9ff;
   }
-  .email-option-icon {
+  .check.email-check:hover { border-color: #1976d2; }
+  .check.email-check input { accent-color: #1976d2; }
+  .check.email-check.checked {
+    border-color: #1976d2;
+    background: #eef5ff;
+  }
+  .check.email-check .email-check-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--fw-black);
+    font-size: 14.5px;
+  }
+  .check.email-check .email-check-title svg {
     color: #1976d2;
     flex-shrink: 0;
-    padding-top: 4px;
   }
-  .email-option-content { flex: 1; min-width: 0; }
-  .email-option-content h3 {
-    margin: 0 0 6px;
-    font-size: 15px;
-    color: var(--fw-black);
-  }
-  .email-option-content p {
-    margin: 0 0 12px;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--fw-grey-700);
-  }
-  .email-option-content .btn {
+  .check.email-check .email-check-desc {
+    display: block;
     font-size: 13px;
-    padding: 10px 18px;
-    width: auto;
+    color: var(--fw-grey-700);
+    margin-top: 6px;
+    line-height: 1.55;
+    font-weight: 400;
   }
-  .email-option .btn-email {
-    background: #1976d2;
-    color: var(--fw-white);
-  }
-  .email-option .btn-email:hover { background: #115293; }
-  .email-option-hint {
-    font-size: 12px;
-    color: var(--fw-grey-500);
-    margin-top: 8px;
-    line-height: 1.4;
-  }
-  @media (max-width: 480px) {
-    .email-option { flex-direction: column; gap: 6px; }
-    .email-option-icon { padding-top: 0; }
-    .email-option-content .btn { width: 100%; justify-content: center; }
-  }
+  .check.email-check .email-check-desc strong { color: var(--fw-grey-900); }
 
   /* ---------- FOOTER ---------- */
   footer {
@@ -917,6 +899,19 @@
         <div class="legal-box">
           <strong>Rechtshinweis:</strong> Für die rechtsverbindliche Mitgliedschaft und das SEPA-Lastschriftmandat ist Ihre eigenhändige Unterschrift erforderlich. Drucken Sie das PDF aus, unterschreiben Sie es und senden Sie es per Post oder eingescannt per E-Mail an den Verein zurück.
         </div>
+
+        <label class="check email-check" for="optEmail">
+          <input type="checkbox" id="optEmail" name="optEmail" />
+          <span>
+            <span class="email-check-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+              Zusätzlich: Vorstand per E-Mail vorab benachrichtigen
+            </span>
+            <span class="email-check-desc">
+              Nach der PDF-Erstellung öffnet sich Ihr E-Mail-Programm mit einem vorbereiteten Text an <strong>verein@feuerwehr-lorsbach.de</strong>. So weiß der Vorstand, dass Ihr Antrag in Kürze per Post eintrifft. Ihre <strong>IBAN wird aus Sicherheitsgründen nicht</strong> in der E-Mail übertragen.
+            </span>
+          </span>
+        </label>
       </div>
       <div class="card-footer">
         <button type="button" class="btn btn-secondary" data-action="prev">← Zurück</button>
@@ -934,27 +929,12 @@
           <svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
         </div>
         <h2>Antrag erstellt!</h2>
-        <p class="lead">Ihr Mitgliedsantrag wurde als PDF generiert und der Download wurde gestartet. Vielen Dank für Ihre Unterstützung der Freiwilligen Feuerwehr Lorsbach e.V.!</p>
+        <p class="lead" id="successLead">Ihr Mitgliedsantrag wurde als PDF generiert und der Download wurde gestartet. Vielen Dank für Ihre Unterstützung der Freiwilligen Feuerwehr Lorsbach e.V.!</p>
 
         <button type="button" id="downloadAgain" class="btn btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18-5 5h3v6h4v-6h3l-5-5z" transform="rotate(180 12 12)"/></svg>
           PDF erneut herunterladen
         </button>
-
-        <div class="email-option">
-          <div class="email-option-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-          </div>
-          <div class="email-option-content">
-            <h3>Optional: Vorstand vorab informieren</h3>
-            <p>Senden Sie eine kurze Ankündigung per E-Mail, damit der Vorstand Ihren Antrag erwartet. Ihr E-Mail-Programm öffnet sich mit einem vorbereiteten Text – Sie müssen nur noch auf „Senden" klicken.</p>
-            <button type="button" id="sendEmailBtn" class="btn btn-email">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-              E-Mail-Ankündigung senden
-            </button>
-            <p class="email-option-hint">Aus Sicherheitsgründen wird Ihre IBAN <strong>nicht</strong> in der E-Mail übertragen – diese steht nur auf dem unterschriebenen PDF.</p>
-          </div>
-        </div>
 
         <div class="next-steps">
           <h3>So geht es weiter:</h3>
@@ -1661,12 +1641,28 @@
       return;
     }
     const originalLabel = generateBtn.innerHTML;
+    const optEmailEl = document.getElementById('optEmail');
+    const wantsEmail = !!(optEmailEl && optEmailEl.checked);
     try {
       generateBtn.disabled = true;
       generateBtn.innerHTML = 'PDF wird erstellt …';
       await wappenPromise;
       generatePdf();
+
+      // Update success-page lead text depending on whether email was opted in
+      const successLead = document.getElementById('successLead');
+      if (successLead) {
+        successLead.textContent = wantsEmail
+          ? 'Ihr Mitgliedsantrag wurde als PDF erstellt und der Download wurde gestartet. Zusätzlich wurde Ihr E-Mail-Programm mit einer Ankündigung an den Vorstand geöffnet. Vielen Dank für Ihre Unterstützung!'
+          : 'Ihr Mitgliedsantrag wurde als PDF generiert und der Download wurde gestartet. Vielen Dank für Ihre Unterstützung der Freiwilligen Feuerwehr Lorsbach e.V.!';
+      }
+
       showStep(6);
+
+      // Trigger mailto AFTER showing success — gives PDF a moment to start downloading
+      if (wantsEmail) {
+        setTimeout(triggerAnnouncementEmail, 350);
+      }
     } catch (err) {
       console.error(err);
       alert('Beim Erstellen des PDF ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu und versuchen Sie es erneut.');
@@ -1684,6 +1680,16 @@
   });
 
   // ---------- EMAIL ANNOUNCEMENT (mailto) ----------
+  function triggerAnnouncementEmail() {
+    const url = buildAnnouncementMailto();
+    const a = document.createElement('a');
+    a.href = url;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   function buildAnnouncementMailto() {
     const d = gatherData();
     const fullName = `${d.vorname} ${d.nachname}`.trim();
@@ -1716,28 +1722,6 @@
       + '&body=' + encodeURIComponent(body);
   }
 
-  const sendEmailBtn = document.getElementById('sendEmailBtn');
-  if (sendEmailBtn) {
-    sendEmailBtn.addEventListener('click', () => {
-      const url = buildAnnouncementMailto();
-      // Use a temporary anchor for max compatibility across browsers/mail clients
-      const a = document.createElement('a');
-      a.href = url;
-      a.rel = 'noopener';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      // Feedback: short visual confirmation on the button
-      const original = sendEmailBtn.innerHTML;
-      sendEmailBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> E-Mail-Programm geöffnet';
-      sendEmailBtn.disabled = true;
-      setTimeout(() => {
-        sendEmailBtn.innerHTML = original;
-        sendEmailBtn.disabled = false;
-      }, 4000);
-    });
-  }
 
   // ---------- PREVENT FORM SUBMIT ----------
   form.addEventListener('submit', e => e.preventDefault());
