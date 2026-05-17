@@ -60,16 +60,19 @@
     gap: 24px;
   }
   .logo {
-    width: 72px;
-    height: 72px;
+    width: 88px;
+    height: 88px;
     flex-shrink: 0;
-    background: var(--fw-white);
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow-md);
-    border: 3px solid var(--fw-black);
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+  }
+  .logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
   }
   .logo svg { width: 50px; height: 50px; }
   .header-title {
@@ -598,7 +601,7 @@
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 720px) {
     .header-inner { padding: 16px; gap: 14px; }
-    .logo { width: 56px; height: 56px; }
+    .logo { width: 64px; height: 64px; }
     .logo svg { width: 38px; height: 38px; }
     .header-title h1 { font-size: 18px; }
     .header-title .eyebrow { font-size: 11px; letter-spacing: 1.5px; }
@@ -622,24 +625,10 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <div class="logo" aria-hidden="true">
-      <!-- Stylized Feuerwehr emblem: helmet + crossed axes -->
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <!-- Crossed axes -->
-        <g stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="10" y1="54" x2="48" y2="16" stroke="#5a3a1f"/>
-          <line x1="54" y1="54" x2="16" y2="16" stroke="#5a3a1f"/>
-          <path d="M44 12 L56 16 L52 24 L40 20 Z" fill="#c8102e"/>
-          <path d="M20 12 L8 16 L12 24 L24 20 Z" fill="#c8102e"/>
-        </g>
-        <!-- Helmet -->
-        <g transform="translate(32 38)">
-          <ellipse cx="0" cy="2" rx="14" ry="9" fill="#c8102e" stroke="#1a1a1a" stroke-width="1.5"/>
-          <path d="M-14 2 Q -14 -10 0 -10 Q 14 -10 14 2" fill="#c8102e" stroke="#1a1a1a" stroke-width="1.5"/>
-          <rect x="-14" y="2" width="28" height="3" fill="#d4af37" stroke="#1a1a1a" stroke-width="1"/>
-          <circle cx="0" cy="-3" r="3" fill="#d4af37" stroke="#1a1a1a" stroke-width="1"/>
-        </g>
-      </svg>
+    <div class="logo">
+      <img src="wappen_feuerwehr_lorsbach_hd_transparent.png"
+           alt="Wappen der Freiwilligen Feuerwehr Lorsbach"
+           width="88" height="88" />
     </div>
     <div class="header-title">
       <div class="eyebrow">Freiwillige Feuerwehr Lorsbach e.V.</div>
@@ -943,6 +932,35 @@
   let currentStep = 1;
   const totalSteps = 5;
   const form = document.getElementById('antragForm');
+
+  // ---------- WAPPEN PRELOAD (for PDF) ----------
+  const WAPPEN_URL = 'wappen_feuerwehr_lorsbach_hd_transparent.png';
+  let wappenDataUrl = null;
+  let wappenDims = null; // {w, h} natural dimensions
+  const wappenPromise = (async () => {
+    try {
+      const resp = await fetch(WAPPEN_URL);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      // Get natural dimensions to preserve aspect ratio in PDF
+      const dims = await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+        img.onerror = () => resolve({ w: 1, h: 1 });
+        img.src = dataUrl;
+      });
+      wappenDataUrl = dataUrl;
+      wappenDims = dims;
+    } catch (err) {
+      console.warn('Wappen could not be preloaded:', err);
+    }
+  })();
 
   // ---------- NAVIGATION ----------
   function showStep(n) {
@@ -1327,23 +1345,29 @@
     doc.setFillColor(200, 16, 46);
     doc.rect(0, 0, pageW, 4, 'F');
 
-    // Logo placeholder (left)
-    doc.setFillColor(200, 16, 46);
-    doc.circle(margin + 8, y + 6, 7, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('FFL', margin + 8, y + 8, { align: 'center' });
+    // Wappen image (left) — preserve aspect ratio
+    const wappenMaxH = 26;
+    const aspect = (wappenDims && wappenDims.w > 0) ? (wappenDims.w / wappenDims.h) : (0.85);
+    const wappenH = wappenMaxH;
+    const wappenW = wappenH * aspect;
+    const wappenY = 8;
+    if (wappenDataUrl) {
+      try {
+        doc.addImage(wappenDataUrl, 'PNG', margin, wappenY, wappenW, wappenH, undefined, 'FAST');
+      } catch (e) {
+        console.warn('Could not embed wappen in PDF:', e);
+      }
+    }
 
-    // Title
+    // Title — centered on the page
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.text('ANTRAG AUF MITGLIEDSCHAFT', pageW / 2, y + 4, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, y + 11, { align: 'center' });
+    doc.setFontSize(17);
+    doc.text('ANTRAG AUF MITGLIEDSCHAFT', pageW / 2, wappenY + 11, { align: 'center' });
+    doc.setFontSize(10.5);
+    doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, wappenY + 18, { align: 'center' });
 
-    y += 22;
+    y = wappenY + wappenH + 4;
     doc.setDrawColor(200, 16, 46);
     doc.setLineWidth(0.5);
     doc.line(margin, y, pageW - margin, y);
@@ -1558,7 +1582,8 @@
   }
 
   // ---------- GENERATE BUTTON ----------
-  document.getElementById('generatePdfBtn').addEventListener('click', () => {
+  const generateBtn = document.getElementById('generatePdfBtn');
+  generateBtn.addEventListener('click', async () => {
     // Re-validate everything
     let allOk = true;
     for (let s = 1; s <= 4; s++) {
@@ -1568,17 +1593,27 @@
       alert('Bitte überprüfen Sie Ihre Angaben – einige Felder sind unvollständig.');
       return;
     }
+    const originalLabel = generateBtn.innerHTML;
     try {
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = 'PDF wird erstellt …';
+      await wappenPromise;
       generatePdf();
       showStep(6);
     } catch (err) {
       console.error(err);
       alert('Beim Erstellen des PDF ist ein Fehler aufgetreten. Bitte laden Sie die Seite neu und versuchen Sie es erneut.');
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.innerHTML = originalLabel;
     }
   });
 
-  document.getElementById('downloadAgain').addEventListener('click', () => {
-    try { generatePdf(); } catch (e) { console.error(e); }
+  document.getElementById('downloadAgain').addEventListener('click', async () => {
+    try {
+      await wappenPromise;
+      generatePdf();
+    } catch (e) { console.error(e); }
   });
 
   // ---------- PREVENT FORM SUBMIT ----------
