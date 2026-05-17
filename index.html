@@ -323,11 +323,32 @@
     position: relative;
   }
   .field input.iban {
-    font-family: 'Roboto Mono', 'Consolas', monospace;
-    letter-spacing: 1.5px;
+    font-family: 'Roboto Mono', 'Consolas', 'Courier New', monospace;
+    letter-spacing: 0.3px;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 15px;
     padding-right: 44px;
+    width: 100%;
+  }
+  @media (min-width: 560px) {
+    .field input.iban {
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+  }
+  @media (max-width: 380px) {
+    .field input.iban {
+      font-size: 13.5px;
+      letter-spacing: 0;
+      padding-right: 38px;
+    }
+    .iban-status {
+      right: 8px !important;
+      width: 22px !important;
+      height: 22px !important;
+      font-size: 12px !important;
+    }
   }
   .field input.iban.valid {
     border-color: var(--fw-success);
@@ -706,12 +727,12 @@
         <div class="field full" style="max-width: 320px;">
           <label for="beitrag">Jährlicher Mitgliedsbeitrag <span class="req">*</span></label>
           <div class="amount-wrap">
-            <input type="number" id="beitrag" name="beitrag" required min="10" step="1" value="30" inputmode="numeric" />
+            <input type="number" id="beitrag" name="beitrag" required min="10" step="1" value="10" inputmode="numeric" />
           </div>
           <div class="amount-quick" role="group" aria-label="Beitrag schnell auswählen">
-            <button type="button" data-amount="10">10 €</button>
+            <button type="button" data-amount="10" class="active">10 €</button>
             <button type="button" data-amount="20">20 €</button>
-            <button type="button" data-amount="30" class="active">30 €</button>
+            <button type="button" data-amount="30">30 €</button>
             <button type="button" data-amount="50">50 €</button>
             <button type="button" data-amount="100">100 €</button>
           </div>
