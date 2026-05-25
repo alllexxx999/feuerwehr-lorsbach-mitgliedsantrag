@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Briefkopf-Vorschau – FF Lorsbach Antrag</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #ececec;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 24px;
+    color: #222;
+  }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+  .sub {
+    text-align: center;
+    color: #555;
+    margin: 0 0 24px;
+    font-size: 14px;
+  }
+  .controls {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .btn {
+    background: #c8102e;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .btn.alt {
+    background: #555;
+  }
+  .btn:hover { opacity: 0.9; }
+
+  /* A4 page mockup */
+  .page-wrap {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .page {
+    background: white;
+    width: 100%;
+    aspect-ratio: 210 / 297;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 4% 5%;
+    position: relative;
+  }
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: #c8102e;
+  }
+  .briefkopf {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 2% 0 3%;
+    border-bottom: 2px solid #c8102e;
+    margin-bottom: 4%;
+  }
+  .briefkopf img.left { width: 80px; height: auto; }
+  .briefkopf img.right { width: 90px; height: auto; }
+  .titles {
+    text-align: center;
+  }
+  .titles h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+  }
+  .titles .sub2 {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+  }
+  .body-text {
+    font-size: 12px;
+    color: #333;
+    line-height: 1.5;
+  }
+  .body-text p { margin: 0 0 8px; }
+
+  /* element legend */
+  .legend {
+    max-width: 800px;
+    margin: 24px auto 0;
+    background: white;
+    padding: 18px 22px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .legend h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: #c8102e;
+  }
+  .legend ul { margin: 0; padding-left: 22px; }
+  .legend li { margin-bottom: 4px; }
+  .legend code {
+    background: #f5f5f5;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Briefkopf-Vorschau – Antrag FF Lorsbach</h1>
+<p class="sub">Mockup mit den Briefkopf-Elementen aus der DOCX-Datei. Klicken Sie auf „Test-PDF erzeugen", um zu sehen, wie es im echten PDF aussieht.</p>
+
+<div class="controls">
+  <button class="btn" id="generatePdfBtn">Test-PDF erzeugen</button>
+  <button class="btn alt" onclick="window.open('index.html', '_blank')">Original-Formular öffnen (Vergleich)</button>
+</div>
+
+<div class="page-wrap">
+  <div class="page">
+    <div class="briefkopf">
+      <img class="left" src="feuerwehr_helm_aexte.png" alt="Feuerwehr-Emblem">
+      <div class="titles">
+        <h2>ANTRAG AUF MITGLIEDSCHAFT</h2>
+        <div class="sub2">IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.</div>
+      </div>
+      <img class="right" src="wappen_hofheim_bw.png" alt="Wappen Hofheim">
+    </div>
+    <div class="body-text">
+      <p>Ich möchte förderndes Mitglied der Freiwilligen Feuerwehr Lorsbach e.V. werden und verpflichte mich hiermit zur jährlichen Zahlung des Mitgliedsbeitrags in Höhe von</p>
+      <p><b>10,00 Euro</b> (Mindestmitgliedsbeitrag 10 Euro pro Jahr) per Lastschriftmandat.</p>
+      <p style="margin-top: 18px; color: #888; font-style: italic;">— Der Rest des Antrags (Datentabelle, SEPA, Unterschriften) folgt unter dem Briefkopf, unverändert wie aktuell —</p>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <h3>Zu prüfende Elemente</h3>
+  <ul>
+    <li><strong>Links:</strong> Feuerwehr-Helm + gekreuzte Äxte aus DOCX (<code>feuerwehr_helm_aexte.png</code>, S/W, ~3 KB)</li>
+    <li><strong>Mitte:</strong> Titel „ANTRAG AUF MITGLIEDSCHAFT" + Untertitel „IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V." (mit Punkten)</li>
+    <li><strong>Rechts:</strong> Wappen Hofheim aus DOCX (<code>wappen_hofheim_bw.png</code>, S/W, ~38 KB)</li>
+    <li><strong>Trennlinie:</strong> Rote 0,5 mm Linie unterhalb des Briefkopfs</li>
+    <li><strong>Roter Balken oben:</strong> Bisher 4 mm hoch – im Briefkopf erhalten</li>
+  </ul>
+</div>
+
+<script>
+let leftImg = null, rightImg = null;
+async function loadImg(url) {
+  const r = await fetch(url);
+  const b = await r.blob();
+  return new Promise(res => {
+    const reader = new FileReader();
+    reader.onloadend = () => res(reader.result);
+    reader.readAsDataURL(b);
+  });
+}
+(async () => {
+  try {
+    leftImg = await loadImg('feuerwehr_helm_aexte.png');
+    rightImg = await loadImg('wappen_hofheim_bw.png');
+  } catch (e) { console.error(e); }
+})();
+
+document.getElementById('generatePdfBtn').addEventListener('click', async () => {
+  if (!leftImg || !rightImg) {
+    leftImg = leftImg || await loadImg('feuerwehr_helm_aexte.png');
+    rightImg = rightImg || await loadImg('wappen_hofheim_bw.png');
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageW = 210, margin = 18;
+
+  // Red bar
+  doc.setFillColor(200, 16, 46);
+  doc.rect(0, 0, pageW, 4, 'F');
+
+  // Briefkopf: emblem links, titel zentriert, wappen rechts
+  const yTop = 10;
+  const embH = 24;   // height of left emblem
+  const embW = 28;   // width of left emblem (approx aspect)
+  const wapH = 28;   // height of right wappen
+  const wapW = 26;   // width of right wappen
+
+  try { doc.addImage(leftImg,  'PNG', margin,                yTop, embW, embH, undefined, 'FAST'); } catch (e) { console.warn(e); }
+  try { doc.addImage(rightImg, 'PNG', pageW - margin - wapW, yTop, wapW, wapH, undefined, 'FAST'); } catch (e) { console.warn(e); }
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(17);
+  doc.text('ANTRAG AUF MITGLIEDSCHAFT', pageW / 2, yTop + 12, { align: 'center' });
+  doc.setFontSize(10.5);
+  doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, yTop + 19, { align: 'center' });
+
+  let y = yTop + Math.max(embH, wapH) + 4;
+  doc.setDrawColor(200, 16, 46);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  // Body sample
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  const intro = 'Ich möchte förderndes Mitglied der Freiwilligen Feuerwehr Lorsbach e.V. werden und verpflichte mich hiermit zur jährlichen Zahlung des Mitgliedsbeitrags in Höhe von';
+  const lines = doc.splitTextToSize(intro, pageW - 2*margin);
+  doc.text(lines, margin, y);
+  y += lines.length * 5 + 2;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text('10,00 Euro', margin, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10.5);
+  doc.text('(Mindestmitgliedsbeitrag 10 Euro pro Jahr) per Lastschriftmandat.', margin + 25, y);
+
+  y += 12;
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(10);
+  doc.setTextColor(150, 150, 150);
+  doc.text('— Der Rest des PDFs (Datentabelle, SEPA-Block, Unterschriften, Seite 2 mit', margin, y); y += 5;
+  doc.text('  Datenschutzerklärung) bleibt unverändert wie aktuell —', margin, y);
+
+  // Open in new tab
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+});
+</script>
+</body>
+</html>
