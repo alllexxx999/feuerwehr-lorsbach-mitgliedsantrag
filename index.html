@@ -851,8 +851,8 @@
             <span class="error-msg">Bitte geben Sie ein gültiges Geburtsdatum im Format tt.mm.jjjj an.</span>
           </div>
           <div class="field">
-            <label for="email">E-Mail-Adresse <span class="hint" style="font-weight:400;">(optional)</span></label>
-            <input type="email" id="email" name="email" autocomplete="email" maxlength="100" />
+            <label for="email">E-Mail-Adresse <span class="req">*</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" required maxlength="100" />
             <span class="error-msg">Bitte geben Sie eine gültige E-Mail-Adresse an.</span>
           </div>
           <div class="field full">
@@ -1339,15 +1339,7 @@
     }
   });
 
-  // Email validation only when filled
-  document.getElementById('email').addEventListener('blur', e => {
-    const v = e.target.value.trim();
-    if (!v) { setError(e.target, false); return; }
-    setError(e.target, !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v));
-  });
-  // Email is optional but if filled, must be valid
-  const emailInput = document.getElementById('email');
-  emailInput.removeAttribute('required');
+  // E-Mail-Adresse ist Pflichtfeld – wird durch die generelle Validierung abgedeckt
   const originalValidateStep = validateStep;
 
   // ---------- BIRTHDAY AUTO-FORMAT ----------
