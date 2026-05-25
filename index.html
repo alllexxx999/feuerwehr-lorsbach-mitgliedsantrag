@@ -897,7 +897,7 @@
             <button type="button" data-amount="50">50 €</button>
             <button type="button" data-amount="100">100 €</button>
           </div>
-          <span class="error-msg">Der Mindestbeitrag beträgt 10 € pro Jahr.</span>
+          <span class="error-msg" id="beitragError">Der Mindestbeitrag beträgt 10 € pro Jahr.</span>
         </div>
 
         <div class="legal-box" style="margin-top: 22px;">
@@ -1247,6 +1247,16 @@
           updateIbanUI();
         }
       }
+      // Special: same for beitrag (nested in .amount-wrap, CSS sibling selector misses it)
+      if (input.id === 'beitrag' && !valid) {
+        const errEl = document.getElementById('beitragError');
+        if (!input.value.trim() && errEl) {
+          errEl.textContent = 'Bitte geben Sie einen jährlichen Beitrag an (mindestens 10 €).';
+          errEl.style.display = 'block';
+        } else if (typeof updateBeitragUI === 'function') {
+          updateBeitragUI();
+        }
+      }
     });
 
     // Step 4 — checkboxes
@@ -1291,7 +1301,7 @@
       return true;
     }
     if (input.id === 'beitrag') {
-      const n = parseFloat(v);
+      const n = parseFloat(v.replace(',', '.'));
       return !isNaN(n) && n >= 10;
     }
     if (input.id === 'iban') {
@@ -1527,19 +1537,55 @@
     return checkIban(value).state === 'valid';
   }
 
-  // ---------- BEITRAG QUICK BUTTONS ----------
+  // ---------- BEITRAG: QUICK BUTTONS + LIVE-VALIDIERUNG ----------
+  const beitragInput = document.getElementById('beitrag');
+  const beitragError = document.getElementById('beitragError');
+
+  function updateBeitragUI() {
+    const v = (beitragInput.value || '').trim();
+    if (v === '') {
+      // empty: kein Live-Fehler (wird ggf. erst bei Submit gemeldet)
+      beitragInput.setAttribute('aria-invalid', 'false');
+      if (beitragError) beitragError.style.display = 'none';
+      return;
+    }
+    const n = parseFloat(v.replace(',', '.'));
+    if (isNaN(n)) {
+      beitragInput.setAttribute('aria-invalid', 'true');
+      if (beitragError) {
+        beitragError.textContent = 'Bitte geben Sie eine gültige Zahl ein.';
+        beitragError.style.display = 'block';
+      }
+      return;
+    }
+    if (n < 10) {
+      beitragInput.setAttribute('aria-invalid', 'true');
+      if (beitragError) {
+        beitragError.textContent = `Hinweis: Der Mindestbeitrag beträgt 10 € pro Jahr. Bitte erhöhen Sie Ihren Beitrag auf mindestens 10 €.`;
+        beitragError.style.display = 'block';
+      }
+      return;
+    }
+    // gültig
+    beitragInput.setAttribute('aria-invalid', 'false');
+    if (beitragError) beitragError.style.display = 'none';
+  }
+
   document.querySelectorAll('.amount-quick button').forEach(btn => {
     btn.addEventListener('click', () => {
       const amount = btn.dataset.amount;
-      document.getElementById('beitrag').value = amount;
+      beitragInput.value = amount;
       document.querySelectorAll('.amount-quick button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      setError(document.getElementById('beitrag'), false);
+      updateBeitragUI();
     });
   });
-  document.getElementById('beitrag').addEventListener('input', () => {
+
+  beitragInput.addEventListener('input', () => {
     document.querySelectorAll('.amount-quick button').forEach(b => b.classList.remove('active'));
+    updateBeitragUI();
   });
+  beitragInput.addEventListener('blur', updateBeitragUI);
 
   // ---------- SUMMARY ----------
   function formatDateDe(d) {
