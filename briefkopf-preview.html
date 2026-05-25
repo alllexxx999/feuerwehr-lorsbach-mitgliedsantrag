@@ -73,6 +73,7 @@
     align-items: center;
     gap: 16px;
     padding: 2% 0 3%;
+    border-bottom: 2px solid #000;
     margin-bottom: 4%;
   }
   .briefkopf img.left { width: 80px; height: auto; }
@@ -159,7 +160,8 @@
     <li><strong>Links:</strong> Feuerwehr-Helm + gekreuzte Äxte aus DOCX (<code>feuerwehr_helm_aexte.png</code>, S/W, ~3 KB)</li>
     <li><strong>Mitte:</strong> Titel „ANTRAG AUF MITGLIEDSCHAFT" + Untertitel „IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V." (mit Punkten)</li>
     <li><strong>Rechts:</strong> Wappen Hofheim aus DOCX (<code>wappen_hofheim_bw.png</code>, S/W, ~38 KB)</li>
-    <li><strong>Roter Balken oben:</strong> Bisher 4 mm hoch – im Briefkopf erhalten (entfernt: rote Trennlinie unterhalb)</li>
+    <li><strong>Trennlinie:</strong> Schwarze 0,5 mm Linie unterhalb des Briefkopfs</li>
+    <li><strong>Roter Balken oben:</strong> Bisher 4 mm hoch – im Briefkopf erhalten</li>
   </ul>
 </div>
 
@@ -211,7 +213,11 @@ document.getElementById('generatePdfBtn').addEventListener('click', async () => 
   doc.setFontSize(10.5);
   doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, yTop + 19, { align: 'center' });
 
-  let y = yTop + Math.max(embH, wapH) + 8;
+  let y = yTop + Math.max(embH, wapH) + 4;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageW - margin, y);
+  y += 8;
 
   // Body sample
   doc.setFont('helvetica', 'normal');
