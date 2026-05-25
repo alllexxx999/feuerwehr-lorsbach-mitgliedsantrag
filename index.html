@@ -1161,13 +1161,16 @@
   const totalSteps = 5;
   const form = document.getElementById('antragForm');
 
-  // ---------- WAPPEN PRELOAD (for PDF) ----------
-  const WAPPEN_URL = 'wappen_feuerwehr_lorsbach_hd_transparent.png';
-  let wappenDataUrl = null;
-  let wappenDims = null; // {w, h} natural dimensions
-  const wappenPromise = (async () => {
+  // ---------- BRIEFKOPF-BILDER PRELOAD (für PDF) ----------
+  // Links: Feuerwehr-Helm + Äxte. Rechts: Wappen Hofheim (S/W, aus DOCX-Briefkopf).
+  const BRIEFKOPF_LEFT_URL  = 'feuerwehr_helm_aexte.png';
+  const BRIEFKOPF_RIGHT_URL = 'wappen_hofheim_bw.png';
+  let briefkopfLeftDataUrl = null,  briefkopfLeftDims  = null;
+  let briefkopfRightDataUrl = null, briefkopfRightDims = null;
+
+  async function loadBriefkopfImage(url) {
     try {
-      const resp = await fetch(WAPPEN_URL);
+      const resp = await fetch(url);
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const blob = await resp.blob();
       const dataUrl = await new Promise((resolve, reject) => {
@@ -1176,19 +1179,27 @@
         reader.onerror = reject;
         reader.readAsDataURL(blob);
       });
-      // Get natural dimensions to preserve aspect ratio in PDF
       const dims = await new Promise((resolve) => {
         const img = new Image();
-        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+        img.onload  = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
         img.onerror = () => resolve({ w: 1, h: 1 });
         img.src = dataUrl;
       });
-      wappenDataUrl = dataUrl;
-      wappenDims = dims;
+      return { dataUrl, dims };
     } catch (err) {
-      console.warn('Wappen could not be preloaded:', err);
+      console.warn('Briefkopf-Bild konnte nicht geladen werden (' + url + '):', err);
+      return null;
     }
-  })();
+  }
+
+  const briefkopfPromise = Promise.all([
+    loadBriefkopfImage(BRIEFKOPF_LEFT_URL).then(r => {
+      if (r) { briefkopfLeftDataUrl = r.dataUrl; briefkopfLeftDims = r.dims; }
+    }),
+    loadBriefkopfImage(BRIEFKOPF_RIGHT_URL).then(r => {
+      if (r) { briefkopfRightDataUrl = r.dataUrl; briefkopfRightDims = r.dims; }
+    })
+  ]);
 
   // ---------- NAVIGATION ----------
   function showStep(n) {
@@ -1657,35 +1668,40 @@
     const contentW = pageW - 2 * margin;
     let y = 18;
 
-    // ---- HEADER ----
-    // Red bar at top
+    // ---- BRIEFKOPF (übernommen aus DOCX) ----
+    // Roter Balken oben
     doc.setFillColor(200, 16, 46);
     doc.rect(0, 0, pageW, 4, 'F');
 
-    // Wappen image (left) — preserve aspect ratio
-    const wappenMaxH = 26;
-    const aspect = (wappenDims && wappenDims.w > 0) ? (wappenDims.w / wappenDims.h) : (0.85);
-    const wappenH = wappenMaxH;
-    const wappenW = wappenH * aspect;
-    const wappenY = 8;
-    if (wappenDataUrl) {
-      try {
-        doc.addImage(wappenDataUrl, 'PNG', margin, wappenY, wappenW, wappenH, undefined, 'FAST');
-      } catch (e) {
-        console.warn('Could not embed wappen in PDF:', e);
-      }
+    // Links: Feuerwehr-Helm + Äxte. Rechts: Wappen Hofheim. Titel mittig.
+    const briefkopfY  = 10;
+    const embMaxH = 24;
+    const wapMaxH = 28;
+    const embAspect = (briefkopfLeftDims  && briefkopfLeftDims.h  > 0) ? (briefkopfLeftDims.w  / briefkopfLeftDims.h)  : 1.4;
+    const wapAspect = (briefkopfRightDims && briefkopfRightDims.h > 0) ? (briefkopfRightDims.w / briefkopfRightDims.h) : 0.95;
+    const embW = embMaxH * embAspect;
+    const wapW = wapMaxH * wapAspect;
+
+    if (briefkopfLeftDataUrl) {
+      try { doc.addImage(briefkopfLeftDataUrl, 'PNG', margin, briefkopfY, embW, embMaxH, undefined, 'FAST'); }
+      catch (e) { console.warn('Linkes Emblem konnte nicht eingebettet werden:', e); }
+    }
+    if (briefkopfRightDataUrl) {
+      try { doc.addImage(briefkopfRightDataUrl, 'PNG', pageW - margin - wapW, briefkopfY, wapW, wapMaxH, undefined, 'FAST'); }
+      catch (e) { console.warn('Rechtes Wappen konnte nicht eingebettet werden:', e); }
     }
 
-    // Title — centered on the page
+    // Titel zentriert (vertikal mittig zu den Bildern)
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(17);
-    doc.text('ANTRAG AUF MITGLIEDSCHAFT', pageW / 2, wappenY + 11, { align: 'center' });
+    doc.text('ANTRAG AUF MITGLIEDSCHAFT', pageW / 2, briefkopfY + 13, { align: 'center' });
     doc.setFontSize(10.5);
-    doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, wappenY + 18, { align: 'center' });
+    doc.text('IN DER FREIWILLIGEN FEUERWEHR LORSBACH E.V.', pageW / 2, briefkopfY + 20, { align: 'center' });
 
-    y = wappenY + wappenH + 4;
-    doc.setDrawColor(200, 16, 46);
+    // Schwarze 0,5 mm Trennlinie unterhalb des Briefkopfs
+    y = briefkopfY + Math.max(embMaxH, wapMaxH) + 4;
+    doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.line(margin, y, pageW - margin, y);
     y += 8;
@@ -1929,7 +1945,7 @@
     try {
       generateBtn.disabled = true;
       generateBtn.innerHTML = 'PDF wird erstellt …';
-      await wappenPromise;
+      await briefkopfPromise;
       const pdfResult = generatePdf();
 
       // Update success-page lead text depending on output method and email opt-in
@@ -1962,7 +1978,7 @@
 
   document.getElementById('downloadAgain').addEventListener('click', async () => {
     try {
-      await wappenPromise;
+      await briefkopfPromise;
       generatePdf();
     } catch (e) { console.error(e); }
   });
