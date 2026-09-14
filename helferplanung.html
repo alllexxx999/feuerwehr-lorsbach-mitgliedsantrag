@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Helferplanung – 125 Jahre Freiwillige Feuerwehr Lorsbach</title>
+<meta name="description" content="Helferplanung der Freiwilligen Feuerwehr Lorsbach – Schichten anlegen, Link teilen, Zusagen sammeln. Wie Doodle, nur für die Feuerwehr." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Roboto+Condensed:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --fw-red: #c8102e;
+    --fw-red-dark: #9a0c23;
+    --fw-red-light: #e63946;
+    --fw-black: #1a1a1a;
+    --fw-grey-900: #2c2c2c;
+    --fw-grey-700: #4a4a4a;
+    --fw-grey-500: #757575;
+    --fw-grey-300: #cccccc;
+    --fw-grey-200: #e2e2e2;
+    --fw-grey-100: #f5f5f5;
+    --fw-grey-50:  #fafafa;
+    --fw-gold: #d4af37;
+    --fw-gold-dark: #a9861f;
+    --fw-white: #ffffff;
+    --fw-success: #2e7d32;
+    --fw-success-bg: #e8f5e9;
+    --fw-warn: #b06d00;
+    --fw-warn-bg: #fff3e0;
+    --fw-error: #c62828;
+    --fw-error-bg: #fdecea;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.10), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -2px rgba(0,0,0,0.05);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--fw-grey-100);
+    color: var(--fw-black);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'Roboto Condensed', 'Roboto', sans-serif; }
+
+  /* ---------- HEADER ---------- */
+  .site-header {
+    background: linear-gradient(180deg, var(--fw-red) 0%, var(--fw-red-dark) 100%);
+    color: var(--fw-white);
+    border-bottom: 4px solid var(--fw-black);
+    box-shadow: var(--shadow-md);
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .logo { width: 72px; height: 72px; flex-shrink: 0; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35)); }
+  .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .header-title .eyebrow { font-size: 13px; font-weight: 700; opacity: 0.9; letter-spacing: 2px; margin-bottom: 4px; text-transform: uppercase; }
+  .header-title h1 { margin: 0; font-size: clamp(19px, 3.2vw, 27px); line-height: 1.15; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; }
+  .header-title .subtitle { font-size: 14px; font-weight: 500; opacity: 0.95; margin-top: 5px; }
+  .header-link { margin-left: auto; flex-shrink: 0; }
+  .header-link a { color: var(--fw-white); opacity: 0.9; font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.5); }
+  .header-link a:hover { opacity: 1; }
+
+  main { max-width: 900px; margin: 28px auto; padding: 0 16px 64px; }
+
+  /* ---------- BANNER ---------- */
+  .banner { border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; font-size: 14px; box-shadow: var(--shadow-sm); }
+  .banner-warn { background: var(--fw-warn-bg); border: 1px solid #f0c987; color: #7a4a00; }
+  .banner-success { background: var(--fw-success-bg); border: 1px solid #a5d6a7; color: var(--fw-success); }
+  .banner-error { background: var(--fw-error-bg); border: 1px solid #f1a9a0; color: var(--fw-error); }
+  .banner-info { background: #e3f2fd; border: 1px solid #90caf9; color: #1565c0; }
+  .banner strong { display: block; margin-bottom: 2px; }
+  .banner a { color: inherit; font-weight: 700; }
+
+  /* ---------- CARD ---------- */
+  .card { background: var(--fw-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 20px; overflow: hidden; }
+  .card-header { padding: 22px 28px 14px; border-bottom: 1px solid var(--fw-grey-200); }
+  .card-header h2 { margin: 0 0 4px; font-size: 20px; font-weight: 900; color: var(--fw-black); text-transform: uppercase; letter-spacing: 0.3px; }
+  .card-header p { margin: 0; color: var(--fw-grey-700); font-size: 14px; }
+  .card-body { padding: 22px 28px; }
+  .card-footer { padding: 16px 28px 22px; display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+  @media (max-width: 640px) {
+    .card-header, .card-body { padding: 18px 18px 14px; }
+    .card-footer { padding: 14px 18px 18px; flex-direction: column-reverse; }
+  }
+
+  /* ---------- FORM ---------- */
+  label { display: block; font-size: 13px; font-weight: 700; color: var(--fw-grey-900); margin-bottom: 5px; }
+  .hint { font-size: 12px; color: var(--fw-grey-500); font-weight: 400; margin-top: 3px; }
+  input[type=text], input[type=date], input[type=time], input[type=number], input[type=tel], input[type=email], textarea, select {
+    width: 100%; padding: 10px 12px; font-size: 15px; font-family: inherit;
+    border: 1px solid var(--fw-grey-300); border-radius: var(--radius-sm); background: var(--fw-white); color: var(--fw-black);
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--fw-red); box-shadow: 0 0 0 3px rgba(200,16,46,0.12); }
+  textarea { resize: vertical; min-height: 64px; }
+  .field { margin-bottom: 16px; }
+  .field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+
+  /* ---------- BUTTONS ---------- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 20px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; cursor: pointer; font-family: inherit; text-decoration: none; transition: transform .1s, box-shadow .15s, background .15s; }
+  .btn-primary { background: var(--fw-red); color: var(--fw-white); }
+  .btn-primary:hover { background: var(--fw-red-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--fw-grey-300); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-secondary { background: var(--fw-white); color: var(--fw-grey-900); border: 1.5px solid var(--fw-grey-300); }
+  .btn-secondary:hover { border-color: var(--fw-grey-700); background: var(--fw-grey-50); }
+  .btn-ghost { background: transparent; color: var(--fw-grey-700); border: 1.5px dashed var(--fw-grey-300); }
+  .btn-ghost:hover { background: var(--fw-grey-50); }
+  .btn-danger { background: var(--fw-white); color: var(--fw-error); border: 1.5px solid var(--fw-error-bg); }
+  .btn-danger:hover { background: var(--fw-error-bg); }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-block { width: 100%; }
+  @media (max-width: 640px) { .btn { width: 100%; } .btn-inline { width: auto; } }
+
+  /* ---------- SHIFT EDITOR ---------- */
+  .shift-row { border: 1px solid var(--fw-grey-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; background: var(--fw-grey-50); position: relative; }
+  .shift-row .shift-num { position: absolute; top: -10px; left: 14px; background: var(--fw-red); color: #fff; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 10px; }
+  .shift-row .remove-shift { position: absolute; top: 10px; right: 10px; }
+  .template-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+
+  /* ---------- SHARE LINKS ---------- */
+  .share-box { background: var(--fw-grey-50); border: 1px dashed var(--fw-grey-300); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 12px; }
+  .share-box .share-label { font-weight: 700; font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .share-row { display: flex; gap: 8px; align-items: center; }
+  .share-row input { font-size: 13px; background: var(--fw-white); color: var(--fw-grey-700); }
+  .share-box.admin { border-color: var(--fw-gold); background: #fdf8ea; }
+
+  /* ---------- SHIFT DISPLAY (participant) ---------- */
+  .shift-card { border: 1px solid var(--fw-grey-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; }
+  .shift-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .shift-title { font-weight: 700; font-size: 16px; margin: 0 0 3px; }
+  .shift-meta { font-size: 13px; color: var(--fw-grey-700); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .badge-ok { background: var(--fw-success-bg); color: var(--fw-success); }
+  .badge-warn { background: var(--fw-warn-bg); color: var(--fw-warn); }
+  .badge-error { background: var(--fw-error-bg); color: var(--fw-error); }
+  .badge-closed { background: var(--fw-grey-200); color: var(--fw-grey-700); }
+
+  .answer-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .answer-btn { flex: 1; min-width: 90px; padding: 9px 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--fw-grey-300); background: var(--fw-white); cursor: pointer; font-weight: 700; font-size: 14px; font-family: inherit; color: var(--fw-grey-700); transition: all .12s; text-align: center; }
+  .answer-btn:hover { border-color: var(--fw-grey-500); }
+  .answer-btn.selected[data-val="yes"] { background: var(--fw-success); border-color: var(--fw-success); color: #fff; }
+  .answer-btn.selected[data-val="maybe"] { background: var(--fw-gold); border-color: var(--fw-gold-dark); color: #4a3800; }
+  .answer-btn.selected[data-val="no"] { background: var(--fw-grey-700); border-color: var(--fw-grey-700); color: #fff; }
+
+  /* ---------- RESULTS GRID ---------- */
+  .results-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .view-toggle { display: flex; border: 1.5px solid var(--fw-grey-300); border-radius: var(--radius-sm); overflow: hidden; }
+  .view-toggle button { border: none; background: var(--fw-white); padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer; color: var(--fw-grey-700); font-family: inherit; }
+  .view-toggle button.active { background: var(--fw-red); color: #fff; }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--fw-grey-200); border-radius: var(--radius-md); }
+  table.results-table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13px; }
+  table.results-table th, table.results-table td { padding: 9px 10px; text-align: center; border-bottom: 1px solid var(--fw-grey-200); border-right: 1px solid var(--fw-grey-100); white-space: nowrap; }
+  table.results-table th.name-col, table.results-table td.name-col { text-align: left; position: sticky; left: 0; background: var(--fw-white); z-index: 1; border-right: 2px solid var(--fw-grey-300); white-space: normal; min-width: 130px; }
+  table.results-table thead th { background: var(--fw-grey-900); color: #fff; font-weight: 700; vertical-align: bottom; }
+  table.results-table thead th.name-col { background: var(--fw-black); }
+  table.results-table tbody tr:nth-child(even) td:not(.name-col) { background: var(--fw-grey-50); }
+  table.results-table tfoot td { font-weight: 700; background: var(--fw-grey-100); border-top: 2px solid var(--fw-grey-300); }
+  table.results-table tfoot td.name-col { background: var(--fw-grey-100); }
+  .cell-yes { color: var(--fw-success); font-weight: 900; }
+  .cell-maybe { color: var(--fw-gold-dark); font-weight: 900; }
+  .cell-no { color: var(--fw-grey-300); }
+  table.results-table tfoot td.foot-ok { color: var(--fw-success); }
+  table.results-table tfoot td.foot-warn { color: var(--fw-warn); }
+  table.results-table tfoot td.foot-error { color: var(--fw-error); }
+  .del-btn { border: none; background: none; color: var(--fw-error); cursor: pointer; font-size: 15px; padding: 2px 6px; }
+
+  .shift-group-card { border: 1px solid var(--fw-grey-200); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 10px; }
+  .shift-group-card h4 { margin: 0 0 8px; font-size: 15px; }
+  .name-pill { display: inline-block; font-size: 12px; padding: 3px 9px; border-radius: 20px; margin: 2px 3px 0 0; }
+  .name-pill.yes { background: var(--fw-success-bg); color: var(--fw-success); }
+  .name-pill.maybe { background: var(--fw-warn-bg); color: var(--fw-warn); }
+
+  /* ---------- MISC ---------- */
+  .muted { color: var(--fw-grey-500); font-size: 13px; }
+  .divider { border: none; border-top: 1px solid var(--fw-grey-200); margin: 20px 0; }
+  .start-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 640px) { .start-grid { grid-template-columns: 1fr; } }
+  .my-events-list a { color: var(--fw-red); text-decoration: none; font-weight: 700; }
+  .my-events-list li { margin-bottom: 6px; }
+  #toast-wrap { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; width: calc(100% - 32px); max-width: 420px; }
+  .toast { background: var(--fw-black); color: #fff; padding: 11px 18px; border-radius: 30px; font-size: 13px; box-shadow: var(--shadow-lg); text-align: center; }
+  .toast.err { background: var(--fw-error); }
+  .toast.ok { background: var(--fw-success); }
+  .spinner-row { display: flex; align-items: center; gap: 10px; color: var(--fw-grey-500); padding: 30px 0; justify-content: center; font-size: 14px; }
+  .lock-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: var(--fw-grey-700); }
+
+  footer { background: var(--fw-black); color: var(--fw-grey-300); text-align: center; padding: 24px 16px; font-size: 13px; }
+  footer a { color: var(--fw-gold); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo"><img src="wappen_feuerwehr_lorsbach_hd_transparent.png" alt="Wappen der Freiwilligen Feuerwehr Lorsbach" width="72" height="72" /></div>
+    <div class="header-title">
+      <div class="eyebrow">Freiwillige Feuerwehr Lorsbach e.V.</div>
+      <h1>Helferplanung</h1>
+      <div class="subtitle">Schichten anlegen, Link teilen, Zusagen sammeln – 125&nbsp;Jahre Feuerwehr Lorsbach</div>
+    </div>
+    <div class="header-link"><a href="index.html">Zum Mitgliedsantrag →</a></div>
+  </div>
+</header>
+
+<main id="app">
+  <div class="spinner-row">Lädt…</div>
+</main>
+
+<div id="toast-wrap"></div>
+
+<footer>
+  <div>Freiwillige Feuerwehr Lorsbach e.V. · Im Lorsbachtal 13 · 65719 Hofheim am Taunus</div>
+  <div style="margin-top:4px;">E-Mail: <a href="mailto:verein@feuerwehr-lorsbach.de">verein@feuerwehr-lorsbach.de</a> · <a href="https://www.feuerwehr-lorsbach.de">www.feuerwehr-lorsbach.de</a></div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+   * KONFIGURATION
+   * Nach Einrichtung des Google-Apps-Script-Backends (siehe README,
+   * Abschnitt "Helferplanung einrichten") hier die Web-App-URL eintragen.
+   * Solange SCRIPT_URL leer ist, läuft die Seite im Demo-Modus: alle
+   * Daten werden nur lokal im Browser gespeichert (localStorage) und
+   * sind NICHT zwischen Geräten sichtbar.
+   * ============================================================ */
+  var SCRIPT_URL = '';
+
+  var LS_DB = 'fwl_helfer_db_v1';
+  var LS_MYEVENTS = 'fwl_helfer_myevents_v1';
+  var LS_RESP_PREFIX = 'fwl_helfer_resp_';
+
+  /* ---------------- Utilities ---------------- */
+  function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
+  function qsa(sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); }
+  function uid() { return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9); }
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function nowIso() { return new Date().toISOString(); }
+
+  function formatDateHuman(dateStr) {
+    if (!dateStr) return '';
+    var parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    var d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    var weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    return weekdays[d.getDay()] + '., ' + parts[2] + '.' + parts[1] + '.' + parts[0];
+  }
+  function formatDateShort(dateStr) {
+    if (!dateStr) return '';
+    var parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    return parts[2] + '.' + parts[1] + '.';
+  }
+  function formatTimeRange(from, to) {
+    if (!from && !to) return '';
+    return (from || '?') + '–' + (to || '?') + ' Uhr';
+  }
+
+  function toast(msg, type) {
+    var wrap = qs('#toast-wrap');
+    var t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.textContent = msg;
+    wrap.appendChild(t);
+    setTimeout(function () { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function () { t.remove(); }, 300); }, 3200);
+  }
+
+  function copyText(text, label) {
+    function done(success) { toast(success ? ((label || 'Link') + ' kopiert ✓') : 'Konnte nicht kopieren – bitte manuell markieren.', success ? 'ok' : 'err'); }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } else {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+        done(true);
+      } catch (e) { done(false); }
+    }
+  }
+
+  function baseUrl() { return location.origin + location.pathname; }
+
+  /* ---------------- Backend ---------------- */
+  var Backend = (function () {
+    var useRemote = !!SCRIPT_URL;
+
+    function loadDb() {
+      try { return JSON.parse(localStorage.getItem(LS_DB)) || { events: {}, responses: {} }; }
+      catch (e) { return { events: {}, responses: {} }; }
+    }
+    function saveDb(db) { localStorage.setItem(LS_DB, JSON.stringify(db)); }
+
+    function remotePost(action, payload) {
+      var body = Object.assign({ action: action }, payload);
+      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (!j.ok) throw new Error(j.error || 'Serverfehler'); return j.data; });
+    }
+    function remoteGet(params) {
+      var usp = new URLSearchParams(params);
+      return fetch(SCRIPT_URL + '?' + usp.toString())
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (!j.ok) throw new Error(j.error || 'Serverfehler'); return j.data; });
+    }
+
+    function normalizeShifts(rawShifts, oldShiftsById) {
+      oldShiftsById = oldShiftsById || {};
+      return (rawShifts || []).map(function (s) {
+        var id = (s.id && oldShiftsById[s.id]) ? s.id : (s.id || uid());
+        return {
+          id: id,
+          title: String(s.title || '').trim(),
+          date: String(s.date || ''),
+          timeFrom: String(s.timeFrom || ''),
+          timeTo: String(s.timeTo || ''),
+          location: String(s.location || ''),
+          neededHelpers: Math.max(1, parseInt(s.neededHelpers, 10) || 1),
+          notes: String(s.notes || '')
+        };
+      }).filter(function (s) { return s.title; });
+    }
+    function stripEv(ev) { var c = Object.assign({}, ev); delete c.adminToken; return c; }
+    function stripResp(r) { var c = Object.assign({}, r); delete c.editToken; return c; }
+
+    function localCreateEvent(body) {
+      var db = loadDb();
+      var eventId = uid(), adminToken = uid(), now = nowIso();
+      var shifts = normalizeShifts(body.shifts);
+      if (!body.title || !String(body.title).trim()) throw new Error('Titel fehlt');
+      if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
+      var event = { eventId: eventId, adminToken: adminToken, title: String(body.title).trim(), description: body.description || '', location: body.location || '', shifts: shifts, active: true, createdAt: now, updatedAt: now };
+      db.events[eventId] = event; saveDb(db);
+      return { eventId: eventId, adminToken: adminToken, event: stripEv(event) };
+    }
+    function localUpdateEvent(body) {
+      var db = loadDb(); var ev = db.events[body.eventId];
+      if (!ev) throw new Error('Planung nicht gefunden');
+      if (ev.adminToken !== body.adminToken) throw new Error('Kein Zugriff (ungültiger Admin-Link)');
+      var oldShiftsById = {}; ev.shifts.forEach(function (s) { oldShiftsById[s.id] = s; });
+      var shifts = normalizeShifts(body.shifts, oldShiftsById);
+      if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
+      Object.assign(ev, {
+        title: body.title !== undefined ? String(body.title).trim() : ev.title,
+        description: body.description !== undefined ? body.description : ev.description,
+        location: body.location !== undefined ? body.location : ev.location,
+        shifts: shifts,
+        active: body.active !== undefined ? !!body.active : ev.active,
+        updatedAt: nowIso()
+      });
+      saveDb(db);
+      return { event: stripEv(ev) };
+    }
+    function localDeleteEvent(body) {
+      var db = loadDb(); var ev = db.events[body.eventId];
+      if (!ev) return { deleted: true };
+      if (ev.adminToken !== body.adminToken) throw new Error('Kein Zugriff');
+      delete db.events[body.eventId];
+      Object.keys(db.responses).forEach(function (id) { if (db.responses[id].eventId === body.eventId) delete db.responses[id]; });
+      saveDb(db);
+      return { deleted: true };
+    }
+    function localGetEvent(eventId) {
+      var db = loadDb(); var ev = db.events[eventId];
+      if (!ev) throw new Error('Planung nicht gefunden');
+      var responses = Object.keys(db.responses).map(function (k) { return db.responses[k]; })
+        .filter(function (r) { return r.eventId === eventId; }).map(stripResp);
+      return { event: stripEv(ev), responses: responses };
+    }
+    function localSubmitResponse(body) {
+      var db = loadDb(); var ev = db.events[body.eventId];
+      if (!ev) throw new Error('Planung nicht gefunden');
+      if (ev.active === false) throw new Error('Diese Helferplanung ist geschlossen – es werden keine neuen Zusagen mehr angenommen.');
+      if (!body.name || !String(body.name).trim()) throw new Error('Name fehlt');
+      var resp = null;
+      if (body.editToken) {
+        resp = Object.keys(db.responses).map(function (k) { return db.responses[k]; })
+          .find(function (r) { return r.eventId === body.eventId && r.editToken === body.editToken; });
+      }
+      var now = nowIso();
+      if (resp) {
+        Object.assign(resp, { name: String(body.name).trim(), contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, updatedAt: now });
+      } else {
+        resp = { responseId: uid(), eventId: body.eventId, editToken: uid(), name: String(body.name).trim(), contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, createdAt: now, updatedAt: now };
+        db.responses[resp.responseId] = resp;
+      }
+      saveDb(db);
+      return { responseId: resp.responseId, editToken: resp.editToken };
+    }
+    function localDeleteResponse(body) {
+      var db = loadDb(); var r = db.responses[body.responseId];
+      if (!r) return { deleted: true };
+      var ev = db.events[body.eventId];
+      var allowed = (r.editToken && r.editToken === body.editToken) || (ev && ev.adminToken === body.adminToken);
+      if (!allowed) throw new Error('Kein Zugriff');
+      delete db.responses[body.responseId]; saveDb(db);
+      return { deleted: true };
+    }
+
+    return {
+      isRemote: useRemote,
+      createEvent: function (body) { return useRemote ? remotePost('createEvent', body) : Promise.resolve().then(function () { return localCreateEvent(body); }); },
+      updateEvent: function (body) { return useRemote ? remotePost('updateEvent', body) : Promise.resolve().then(function () { return localUpdateEvent(body); }); },
+      deleteEvent: function (body) { return useRemote ? remotePost('deleteEvent', body) : Promise.resolve().then(function () { return localDeleteEvent(body); }); },
+      getEvent: function (eventId) { return useRemote ? remoteGet({ action: 'getEvent', eventId: eventId }) : Promise.resolve().then(function () { return localGetEvent(eventId); }); },
+      submitResponse: function (body) { return useRemote ? remotePost('submitResponse', body) : Promise.resolve().then(function () { return localSubmitResponse(body); }); },
+      deleteResponse: function (body) { return useRemote ? remotePost('deleteResponse', body) : Promise.resolve().then(function () { return localDeleteResponse(body); }); }
+    };
+  })();
+
+  /* ---------------- "Meine Planungen" (lokal, pro Browser) ---------------- */
+  function loadMyEvents() { try { return JSON.parse(localStorage.getItem(LS_MYEVENTS)) || []; } catch (e) { return []; } }
+  function saveMyEvent(entry) {
+    var list = loadMyEvents().filter(function (e) { return e.eventId !== entry.eventId; });
+    list.unshift(entry);
+    localStorage.setItem(LS_MYEVENTS, JSON.stringify(list.slice(0, 30)));
+  }
+  function removeMyEvent(eventId) {
+    localStorage.setItem(LS_MYEVENTS, JSON.stringify(loadMyEvents().filter(function (e) { return e.eventId !== eventId; })));
+  }
+  function loadMyResponse(eventId) { try { return JSON.parse(localStorage.getItem(LS_RESP_PREFIX + eventId)) || null; } catch (e) { return null; } }
+  function saveMyResponse(eventId, data) { localStorage.setItem(LS_RESP_PREFIX + eventId, JSON.stringify(data)); }
+
+  /* ---------------- Templates für Schichten ---------------- */
+  var SHIFT_TEMPLATE = [
+    { title: 'Aufbau Festzelt & Gelände', neededHelpers: 8, notes: '' },
+    { title: 'Getränkeausschank', neededHelpers: 4, notes: '' },
+    { title: 'Kuchentheke & Kaffee', neededHelpers: 3, notes: '' },
+    { title: 'Grillstand', neededHelpers: 4, notes: '' },
+    { title: 'Kasse / Einlass', neededHelpers: 2, notes: '' },
+    { title: 'Kinderprogramm / Aufsicht', neededHelpers: 3, notes: '' },
+    { title: 'Ordnungsdienst / Parkplatz', neededHelpers: 3, notes: '' },
+    { title: 'Spülküche / Geschirrrückgabe', neededHelpers: 3, notes: '' },
+    { title: 'Abbau & Aufräumen', neededHelpers: 8, notes: '' }
+  ];
+
+  /* ============================================================
+   * VIEWS
+   * ============================================================ */
+  var app = qs('#app');
+
+  function demoBanner() {
+    if (Backend.isRemote) return '';
+    return '<div class="banner banner-warn"><strong>⚠️ Demo-Modus</strong>Diese Seite ist noch nicht mit dem geteilten Google-Sheet-Backend verbunden. Planungen und Zusagen werden nur lokal in diesem Browser gespeichert und sind für andere Geräte nicht sichtbar. Einrichtung siehe README, Abschnitt „Helferplanung einrichten“.</div>';
+  }
+
+  function errorCard(message) {
+    app.innerHTML = demoBanner() + '<div class="banner banner-error"><strong>Fehler</strong>' + escapeHtml(message) + '</div>' +
+      '<a class="btn btn-secondary" href="' + baseUrl() + '">← Zur Startseite</a>';
+  }
+
+  /* ---------- Start ---------- */
+  function renderStart() {
+    var myEvents = loadMyEvents();
+    var listHtml = '';
+    if (myEvents.length) {
+      listHtml = '<div class="card"><div class="card-header"><h2>Deine Planungen auf diesem Gerät</h2><p>Nur auf diesem Browser sichtbar – Admin-Links bitte sicher aufbewahren.</p></div><div class="card-body">' +
+        '<ul class="my-events-list" style="list-style:none;padding:0;margin:0;">' +
+        myEvents.map(function (e) {
+          return '<li>📋 <a href="' + escapeHtml(e.adminUrl) + '">' + escapeHtml(e.title) + '</a> <span class="muted">· erstellt am ' + escapeHtml(new Date(e.createdAt).toLocaleDateString('de-DE')) + '</span></li>';
+        }).join('') + '</ul></div></div>';
+    }
+
+    app.innerHTML = demoBanner() + listHtml +
+      '<div class="card">' +
+      '<div class="card-header"><h2>Neue Helferplanung erstellen</h2><p>Lege Schichten an und erhalte sofort einen Link zum Teilen – Helfer tragen sich direkt ein, wie bei Doodle.</p></div>' +
+      '<div class="card-body" id="create-form-body"></div>' +
+      '</div>' +
+      '<div class="card"><div class="card-body" style="font-size:14px;color:var(--fw-grey-700);">' +
+      '<strong>Du hast einen Helfer-Link von der Feuerwehr bekommen?</strong><br>Öffne ihn direkt aus der Nachricht (WhatsApp/E-Mail) – auf dieser Seite selbst kannst du nur neue Planungen erstellen.' +
+      '</div></div>';
+
+    renderCreateForm(qs('#create-form-body'));
+  }
+
+  function shiftRowHtml(idx, shift) {
+    shift = shift || {};
+    return '' +
+      '<div class="shift-row" data-shift-id="' + escapeHtml(shift.id || '') + '">' +
+      '<span class="shift-num">Schicht ' + (idx + 1) + '</span>' +
+      '<button type="button" class="btn btn-danger btn-sm remove-shift" title="Schicht entfernen">✕</button>' +
+      '<div class="field"><label>Bezeichnung *</label><input type="text" class="s-title" value="' + escapeHtml(shift.title || '') + '" placeholder="z. B. Getränkeausschank" /></div>' +
+      '<div class="field-row">' +
+      '<div class="field"><label>Datum *</label><input type="date" class="s-date" value="' + escapeHtml(shift.date || '') + '" /></div>' +
+      '<div class="field"><label>Von</label><input type="time" class="s-from" value="' + escapeHtml(shift.timeFrom || '') + '" /></div>' +
+      '<div class="field"><label>Bis</label><input type="time" class="s-to" value="' + escapeHtml(shift.timeTo || '') + '" /></div>' +
+      '<div class="field"><label>Benötigte Helfer</label><input type="number" class="s-needed" min="1" value="' + (shift.neededHelpers || 3) + '" /></div>' +
+      '</div>' +
+      '<div class="field-row">' +
+      '<div class="field" style="grid-column:1/-1;"><label>Ort (optional, falls abweichend)</label><input type="text" class="s-location" value="' + escapeHtml(shift.location || '') + '" placeholder="z. B. Feuerwehrgerätehaus" /></div>' +
+      '</div>' +
+      '<div class="field" style="margin-bottom:0;"><label>Notizen (optional)</label><input type="text" class="s-notes" value="' + escapeHtml(shift.notes || '') + '" placeholder="z. B. Kleidung, Treffpunkt …" /></div>' +
+      '</div>';
+  }
+
+  function readShiftRows(container) {
+    return qsa('.shift-row', container).map(function (row) {
+      return {
+        id: row.getAttribute('data-shift-id') || undefined,
+        title: qs('.s-title', row).value.trim(),
+        date: qs('.s-date', row).value,
+        timeFrom: qs('.s-from', row).value,
+        timeTo: qs('.s-to', row).value,
+        neededHelpers: qs('.s-needed', row).value,
+        location: qs('.s-location', row).value.trim(),
+        notes: qs('.s-notes', row).value.trim()
+      };
+    });
+  }
+
+  function renumberShifts(container) {
+    qsa('.shift-row', container).forEach(function (row, i) { qs('.shift-num', row).textContent = 'Schicht ' + (i + 1); });
+  }
+
+  function renderCreateForm(container, existingEvent) {
+    var isEdit = !!existingEvent;
+    container.innerHTML = '' +
+      '<div class="field"><label>Titel der Planung *</label><input type="text" id="ev-title" value="' + escapeHtml(isEdit ? existingEvent.title : '125 Jahre Feuerwehr Lorsbach – Helfereinsatz') + '" /></div>' +
+      '<div class="field"><label>Beschreibung (optional)</label><textarea id="ev-desc" placeholder="z. B. Ablauf, Treffpunkt, Kontaktperson …">' + escapeHtml(isEdit ? existingEvent.description : '') + '</textarea></div>' +
+      '<div class="field"><label>Allgemeiner Ort (optional)</label><input type="text" id="ev-location" value="' + escapeHtml(isEdit ? existingEvent.location : '') + '" placeholder="z. B. Festplatz Lorsbach" /></div>' +
+      '<hr class="divider">' +
+      '<label style="margin-bottom:10px;">Schichten</label>' +
+      (isEdit ? '' : '<div class="template-bar"><button type="button" class="btn btn-ghost btn-sm btn-inline" id="load-template">📋 Vorlage laden (typische Fest-Schichten)</button></div>') +
+      '<div id="shift-rows"></div>' +
+      '<button type="button" class="btn btn-secondary btn-sm btn-inline" id="add-shift">+ Schicht hinzufügen</button>';
+
+    var rowsEl = qs('#shift-rows', container);
+    var initialShifts = isEdit ? existingEvent.shifts : [{}];
+    initialShifts.forEach(function (s, i) { rowsEl.insertAdjacentHTML('beforeend', shiftRowHtml(i, s)); });
+
+    rowsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.remove-shift');
+      if (!btn) return;
+      if (qsa('.shift-row', rowsEl).length <= 1) { toast('Mindestens eine Schicht wird benötigt.', 'err'); return; }
+      btn.closest('.shift-row').remove();
+      renumberShifts(rowsEl);
+    });
+
+    qs('#add-shift', container).addEventListener('click', function () {
+      rowsEl.insertAdjacentHTML('beforeend', shiftRowHtml(qsa('.shift-row', rowsEl).length, {}));
+    });
+
+    var tplBtn = qs('#load-template', container);
+    if (tplBtn) {
+      tplBtn.addEventListener('click', function () {
+        rowsEl.innerHTML = '';
+        SHIFT_TEMPLATE.forEach(function (s, i) { rowsEl.insertAdjacentHTML('beforeend', shiftRowHtml(i, s)); });
+        toast('Vorlage geladen – bitte Datum & Uhrzeiten ergänzen.', 'ok');
+      });
+    }
+
+    if (!isEdit) {
+      container.insertAdjacentHTML('beforeend', '<div style="margin-top:20px;"><button type="button" class="btn btn-primary btn-block" id="create-submit">Planung erstellen & Link generieren</button></div>');
+      qs('#create-submit', container).addEventListener('click', function () {
+        var btn = this;
+        var payload = {
+          title: qs('#ev-title', container).value.trim(),
+          description: qs('#ev-desc', container).value.trim(),
+          location: qs('#ev-location', container).value.trim(),
+          shifts: readShiftRows(rowsEl)
+        };
+        if (!payload.title) { toast('Bitte einen Titel eingeben.', 'err'); return; }
+        var missingDate = payload.shifts.some(function (s) { return s.title && !s.date; });
+        if (missingDate) { toast('Bitte bei jeder Schicht ein Datum angeben.', 'err'); return; }
+        btn.disabled = true; btn.textContent = 'Wird erstellt …';
+        Backend.createEvent(payload).then(function (data) {
+          saveMyEvent({ eventId: data.eventId, title: payload.title, createdAt: nowIso(), adminUrl: baseUrl() + '?event=' + data.eventId + '#admin=' + data.adminToken });
+          location.href = baseUrl() + '?event=' + data.eventId + '#admin=' + data.adminToken + '&created=1';
+        }).catch(function (err) {
+          toast(err.message || 'Fehler beim Erstellen.', 'err');
+          btn.disabled = false; btn.textContent = 'Planung erstellen & Link generieren';
+        });
+      });
+    }
+  }
+
+  /* ---------- Shared: Schicht-Statistik ---------- */
+  function computeStats(shifts, responses) {
+    var stats = {};
+    shifts.forEach(function (s) { stats[s.id] = { yes: 0, maybe: 0, no: 0, names: { yes: [], maybe: [] } }; });
+    responses.forEach(function (r) {
+      shifts.forEach(function (s) {
+        var v = (r.answers || {})[s.id] || 'no';
+        if (!stats[s.id]) return;
+        stats[s.id][v] = (stats[s.id][v] || 0) + 1;
+        if (v === 'yes' || v === 'maybe') stats[s.id].names[v].push(r.name);
+      });
+    });
+    return stats;
+  }
+  function badgeParts(shift, stat) {
+    var have = stat.yes, need = shift.neededHelpers;
+    if (have >= need) return { cls: 'ok', text: '✓ ' + have + '/' + need + ' besetzt' };
+    if (have + stat.maybe >= need) return { cls: 'warn', text: have + '/' + need + ' + ' + stat.maybe + ' evtl.' };
+    return { cls: 'error', text: have + '/' + need + ' besetzt' };
+  }
+  function fillBadge(shift, stat) {
+    var p = badgeParts(shift, stat);
+    return '<span class="badge badge-' + p.cls + '">' + p.text + '</span>';
+  }
+
+  /* ---------- Ergebnis-Grid (wiederverwendbar) ---------- */
+  function renderResultsBlock(container, event, responses, opts) {
+    opts = opts || {};
+    var stats = computeStats(event.shifts, responses);
+    var mode = container.getAttribute('data-view-mode') || 'table';
+
+    var html = '<div class="results-toolbar">' +
+      '<div class="muted">' + responses.length + ' Rückmeldung' + (responses.length === 1 ? '' : 'en') + '</div>' +
+      '<div class="view-toggle"><button data-mode="table" class="' + (mode === 'table' ? 'active' : '') + '">Tabelle</button><button data-mode="grouped" class="' + (mode === 'grouped' ? 'active' : '') + '">Nach Schicht</button></div>' +
+      '</div>';
+
+    if (!responses.length) {
+      html += '<p class="muted">Noch keine Rückmeldungen – hier der offene Bedarf je Schicht:</p>' +
+        event.shifts.map(function (s) {
+          return '<div class="shift-group-card"><h4>' + escapeHtml(s.title) + ' <span class="muted">· ' + formatDateShort(s.date) + ' ' + escapeHtml(formatTimeRange(s.timeFrom, s.timeTo)) + '</span> ' + fillBadge(s, stats[s.id]) + '</h4></div>';
+        }).join('');
+    } else if (mode === 'grouped') {
+      html += event.shifts.map(function (s) {
+        var stat = stats[s.id];
+        return '<div class="shift-group-card"><h4>' + escapeHtml(s.title) + ' <span class="muted">· ' + formatDateShort(s.date) + ' ' + escapeHtml(formatTimeRange(s.timeFrom, s.timeTo)) + '</span> ' + fillBadge(s, stat) + '</h4>' +
+          (stat.names.yes.length ? stat.names.yes.map(function (n) { return '<span class="name-pill yes">✓ ' + escapeHtml(n) + '</span>'; }).join('') : '<span class="muted">Noch niemand zugesagt.</span>') +
+          (stat.names.maybe.length ? stat.names.maybe.map(function (n) { return '<span class="name-pill maybe">? ' + escapeHtml(n) + '</span>'; }).join('') : '') +
+          '</div>';
+      }).join('');
+    } else {
+      html += '<div class="table-scroll"><table class="results-table"><thead><tr><th class="name-col">Helfer/in</th>' +
+        event.shifts.map(function (s) { return '<th title="' + escapeHtml(s.title) + '">' + escapeHtml(s.title.length > 16 ? s.title.slice(0, 15) + '…' : s.title) + '<br><span style="font-weight:400;opacity:.8;">' + formatDateShort(s.date) + '</span></th>'; }).join('') +
+        (opts.admin ? '<th></th>' : '') + '</tr></thead><tbody>' +
+        responses.map(function (r) {
+          return '<tr><td class="name-col">' + escapeHtml(r.name) + (r.comment ? '<br><span class="muted">' + escapeHtml(r.comment) + '</span>' : '') + '</td>' +
+            event.shifts.map(function (s) {
+              var v = (r.answers || {})[s.id] || 'no';
+              var sym = v === 'yes' ? '✓' : v === 'maybe' ? '?' : '–';
+              var cls = v === 'yes' ? 'cell-yes' : v === 'maybe' ? 'cell-maybe' : 'cell-no';
+              return '<td class="' + cls + '">' + sym + '</td>';
+            }).join('') +
+            (opts.admin ? '<td><button class="del-btn" data-resp-id="' + escapeHtml(r.responseId) + '" title="Rückmeldung löschen">🗑</button></td>' : '') +
+            '</tr>';
+        }).join('') +
+        '</tbody><tfoot><tr><td class="name-col">Bedarf</td>' +
+        event.shifts.map(function (s) { var p = badgeParts(s, stats[s.id]); return '<td class="foot-' + p.cls + '">' + p.text + '</td>'; }).join('') +
+        (opts.admin ? '<td></td>' : '') + '</tr></tfoot></table></div>';
+    }
+
+    container.innerHTML = html;
+    qsa('.view-toggle button', container).forEach(function (b) {
+      b.addEventListener('click', function () {
+        container.setAttribute('data-view-mode', b.getAttribute('data-mode'));
+        renderResultsBlock(container, event, responses, opts);
+      });
+    });
+    if (opts.admin) {
+      qsa('.del-btn', container).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!confirm('Diese Rückmeldung wirklich löschen?')) return;
+          Backend.deleteResponse({ eventId: event.eventId, responseId: b.getAttribute('data-resp-id'), adminToken: opts.adminToken })
+            .then(function () { toast('Rückmeldung gelöscht.', 'ok'); opts.onChange && opts.onChange(); })
+            .catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
+        });
+      });
+    }
+  }
+
+  /* ---------- Teilnehmer-Ansicht ---------- */
+  function renderParticipant(eventId, urlRespId, urlEditToken) {
+    app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Helferplanung …</div>';
+    Backend.getEvent(eventId).then(function (data) {
+      var event = data.event, responses = data.responses;
+      var mine = null;
+      if (urlEditToken) {
+        mine = { responseId: urlRespId, editToken: urlEditToken };
+        var found = responses.find(function (r) { return r.responseId === urlRespId; });
+        if (found) mine = Object.assign({}, found, { editToken: urlEditToken });
+      } else {
+        var stored = loadMyResponse(eventId);
+        if (stored) {
+          var found2 = responses.find(function (r) { return r.responseId === stored.responseId; });
+          mine = found2 ? Object.assign({}, found2, { editToken: stored.editToken }) : null;
+        }
+      }
+
+      var closedBanner = event.active === false ? '<div class="banner banner-warn"><strong>Diese Helferplanung ist geschlossen.</strong>Es werden keine neuen Zusagen mehr angenommen. Unten siehst du den aktuellen Stand.</div>' : '';
+
+      var formHtml = '';
+      if (event.active !== false) {
+        formHtml = '<div class="card"><div class="card-header"><h2>' + (mine ? 'Deine Zusage bearbeiten' : 'Ich möchte helfen') + '</h2><p>' + (mine ? 'Du kannst deine Auswahl jederzeit ändern.' : 'Trage dich pro Schicht mit Ja / Vielleicht / Nein ein.') + '</p></div>' +
+          '<div class="card-body">' +
+          '<div class="field-row"><div class="field"><label>Name *</label><input type="text" id="p-name" value="' + escapeHtml(mine ? mine.name : '') + '" placeholder="Vor- und Nachname" /></div>' +
+          '<div class="field"><label>Kontakt (Telefon/E-Mail, optional)</label><input type="text" id="p-contact" value="' + escapeHtml(mine ? mine.contact : '') + '" /></div></div>' +
+          '<div id="p-shifts"></div>' +
+          '<div class="field"><label>Anmerkung (optional)</label><textarea id="p-comment" placeholder="z. B. nur bis 18 Uhr">' + escapeHtml(mine ? mine.comment : '') + '</textarea></div>' +
+          '<p class="hint">Nicht ausgewählte Schichten werden beim Speichern als „Nein“ gewertet.</p>' +
+          '</div><div class="card-footer"><button class="btn btn-primary" id="p-submit">' + (mine ? 'Änderungen speichern' : 'Zusage abschicken') + '</button></div></div>';
+      }
+
+      app.innerHTML = demoBanner() + closedBanner +
+        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + '</h2>' +
+        (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') +
+        (event.location ? '<p class="muted">📍 ' + escapeHtml(event.location) + '</p>' : '') +
+        '</div></div>' +
+        formHtml +
+        '<div class="card"><div class="card-header"><h2>Aktueller Stand</h2></div><div class="card-body" id="p-results"></div></div>' +
+        '<p style="text-align:center;"><a class="btn btn-ghost btn-inline" href="' + baseUrl() + '?event=' + eventId + '&view=results">🔍 Nur Ergebnisse ansehen (Link zum Teilen)</a></p>';
+
+      renderResultsBlock(qs('#p-results'), event, responses, {});
+
+      if (event.active !== false) {
+        var shiftsEl = qs('#p-shifts');
+        var answers = Object.assign({}, mine ? mine.answers : {});
+        shiftsEl.innerHTML = event.shifts.map(function (s) {
+          var stat = computeStats(event.shifts, responses)[s.id];
+          var cur = answers[s.id] || null;
+          return '<div class="shift-card" data-shift-id="' + escapeHtml(s.id) + '">' +
+            '<div class="shift-card-head"><div><p class="shift-title">' + escapeHtml(s.title) + '</p>' +
+            '<p class="shift-meta">📅 ' + formatDateHuman(s.date) + (s.timeFrom || s.timeTo ? ' · ⏰ ' + escapeHtml(formatTimeRange(s.timeFrom, s.timeTo)) : '') + (s.location ? ' · 📍 ' + escapeHtml(s.location) : '') + '</p>' +
+            (s.notes ? '<p class="shift-meta">' + escapeHtml(s.notes) + '</p>' : '') + '</div>' +
+            fillBadge(s, stat) + '</div>' +
+            '<div class="answer-group">' +
+            ['yes', 'maybe', 'no'].map(function (v) {
+              var label = v === 'yes' ? '✓ Ja' : v === 'maybe' ? '? Vielleicht' : '✕ Nein';
+              return '<button type="button" class="answer-btn' + (cur === v ? ' selected' : '') + '" data-val="' + v + '">' + label + '</button>';
+            }).join('') +
+            '</div></div>';
+        }).join('');
+
+        shiftsEl.addEventListener('click', function (e) {
+          var btn = e.target.closest('.answer-btn');
+          if (!btn) return;
+          var group = btn.closest('.answer-group');
+          var wasSelected = btn.classList.contains('selected');
+          qsa('.answer-btn', group).forEach(function (b) { b.classList.remove('selected'); });
+          if (!wasSelected) btn.classList.add('selected');
+        });
+
+        qs('#p-submit').addEventListener('click', function () {
+          var btn = this;
+          var name = qs('#p-name').value.trim();
+          if (!name) { toast('Bitte deinen Namen eingeben.', 'err'); return; }
+          var ans = {};
+          qsa('.shift-card', shiftsEl).forEach(function (card) {
+            var sel = qs('.answer-btn.selected', card);
+            ans[card.getAttribute('data-shift-id')] = sel ? sel.getAttribute('data-val') : 'no';
+          });
+          var payload = {
+            eventId: eventId,
+            name: name,
+            contact: qs('#p-contact').value.trim(),
+            comment: qs('#p-comment').value.trim(),
+            answers: ans,
+            editToken: mine ? mine.editToken : undefined
+          };
+          btn.disabled = true; btn.textContent = 'Wird gespeichert …';
+          Backend.submitResponse(payload).then(function (data) {
+            saveMyResponse(eventId, { responseId: data.responseId, editToken: data.editToken });
+            toast('Danke! Deine Zusage wurde gespeichert.', 'ok');
+            var personalLink = baseUrl() + '?event=' + eventId + '&resp=' + data.responseId + '&edit=' + data.editToken;
+            qs('.card-footer').insertAdjacentHTML('beforebegin', '<div class="share-box"><div class="share-label">🔗 Persönlicher Link zum späteren Ändern deiner Antwort</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(personalLink) + '"><button class="btn btn-secondary btn-sm btn-inline copy-personal">Kopieren</button></div><p class="hint">Speichere diesen Link, falls du deine Zusage später von einem anderen Gerät ändern möchtest.</p></div>');
+            qs('.copy-personal').addEventListener('click', function () { copyText(personalLink, 'Persönlicher Link'); });
+            renderParticipantRefreshResults(eventId);
+          }).catch(function (err) {
+            toast(err.message || 'Fehler beim Speichern.', 'err');
+          }).finally(function () {
+            btn.disabled = false; btn.textContent = mine ? 'Änderungen speichern' : 'Zusage abschicken';
+          });
+        });
+      }
+    }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
+  }
+
+  function renderParticipantRefreshResults(eventId) {
+    Backend.getEvent(eventId).then(function (data) {
+      var box = qs('#p-results');
+      if (box) renderResultsBlock(box, data.event, data.responses, {});
+    });
+  }
+
+  /* ---------- Nur-Ergebnisse-Ansicht ---------- */
+  function renderResultsOnly(eventId) {
+    app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Ergebnisse …</div>';
+    Backend.getEvent(eventId).then(function (data) {
+      var event = data.event;
+      app.innerHTML = demoBanner() +
+        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + '</h2>' +
+        (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') + '</div>' +
+        '<div class="card-body" id="r-results"></div></div>' +
+        '<p style="text-align:center;"><a class="btn btn-secondary btn-inline" href="' + baseUrl() + '?event=' + eventId + '">✏️ Selbst eintragen</a></p>';
+      renderResultsBlock(qs('#r-results'), event, data.responses, {});
+    }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
+  }
+
+  /* ---------- Admin-Ansicht ---------- */
+  function renderAdmin(eventId, adminToken, justCreated) {
+    app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Verwaltung …</div>';
+    Backend.getEvent(eventId).then(function (data) {
+      var event = data.event, responses = data.responses;
+      var helperLink = baseUrl() + '?event=' + eventId;
+      var resultsLink = baseUrl() + '?event=' + eventId + '&view=results';
+      var adminLink = baseUrl() + '?event=' + eventId + '#admin=' + adminToken;
+
+      var createdBanner = justCreated ? '<div class="banner banner-success"><strong>🎉 Planung erstellt!</strong>Teile jetzt den Helfer-Link mit deiner Mannschaft.</div>' : '';
+
+      app.innerHTML = demoBanner() + createdBanner +
+        '<div class="banner banner-info"><strong>🔒 Admin-Ansicht</strong>Diesen Link nicht öffentlich teilen – nur der Helfer-Link und der Ergebnis-Link sind für alle gedacht.</div>' +
+        '<div class="card"><div class="card-header"><h2>Links zum Teilen</h2></div><div class="card-body">' +
+        '<div class="share-box"><div class="share-label">👥 Helfer-Link (zum Eintragen)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(helperLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(helperLink) + '" data-label="Helfer-Link">Kopieren</button></div></div>' +
+        '<div class="share-box"><div class="share-label">📊 Ergebnis-Link (nur ansehen, für alle)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(resultsLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(resultsLink) + '" data-label="Ergebnis-Link">Kopieren</button></div></div>' +
+        '<div class="share-box admin"><div class="share-label">🔒 Admin-Link (nur für dich!)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(adminLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(adminLink) + '" data-label="Admin-Link">Kopieren</button></div></div>' +
+        '</div></div>' +
+
+        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + (event.active === false ? ' <span class="badge badge-closed">Geschlossen</span>' : '') + '</h2>' +
+        (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') + '</div>' +
+        '<div class="card-body" id="admin-results"></div>' +
+        '<div class="card-footer">' +
+        '<button class="btn btn-secondary btn-inline" id="export-csv">⬇️ CSV exportieren</button>' +
+        '<button class="btn btn-secondary btn-inline" id="toggle-active">' + (event.active === false ? '🔓 Planung wieder öffnen' : '🔒 Planung schließen') + '</button>' +
+        '<button class="btn btn-ghost btn-inline" id="toggle-edit">✏️ Titel/Schichten bearbeiten</button>' +
+        '</div></div>' +
+
+        '<div class="card" id="edit-card" style="display:none;"><div class="card-header"><h2>Planung bearbeiten</h2></div><div class="card-body" id="edit-body"></div><div class="card-footer"><button class="btn btn-primary btn-inline" id="save-edit">Änderungen speichern</button></div></div>' +
+
+        '<div class="card"><div class="card-header"><h2 style="color:var(--fw-error);">Gefahrenzone</h2></div><div class="card-body"><button class="btn btn-danger btn-inline" id="delete-event">🗑 Planung endgültig löschen</button></div></div>';
+
+      function refresh() { renderAdmin(eventId, adminToken, false); }
+
+      renderResultsBlock(qs('#admin-results'), event, responses, { admin: true, adminToken: adminToken, onChange: refresh });
+
+      qsa('[data-copy]').forEach(function (b) { b.addEventListener('click', function () { copyText(b.getAttribute('data-copy'), b.getAttribute('data-label')); }); });
+
+      qs('#export-csv').addEventListener('click', function () {
+        var cols = ['Name', 'Kontakt', 'Kommentar'].concat(event.shifts.map(function (s) { return s.title + ' (' + s.date + ')'; }));
+        var rows = [cols].concat(responses.map(function (r) {
+          return [r.name, r.contact || '', r.comment || ''].concat(event.shifts.map(function (s) {
+            var v = (r.answers || {})[s.id] || 'no';
+            return v === 'yes' ? 'Ja' : v === 'maybe' ? 'Vielleicht' : 'Nein';
+          }));
+        }));
+        var csv = rows.map(function (row) { return row.map(function (cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
+        var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'helferplanung-' + event.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      });
+
+      qs('#toggle-active').addEventListener('click', function () {
+        var btn = this; btn.disabled = true;
+        Backend.updateEvent({ eventId: eventId, adminToken: adminToken, title: event.title, description: event.description, location: event.location, shifts: event.shifts, active: !(event.active !== false) })
+          .then(function () { toast('Status geändert.', 'ok'); refresh(); })
+          .catch(function (err) { toast(err.message || 'Fehler.', 'err'); btn.disabled = false; });
+      });
+
+      qs('#delete-event').addEventListener('click', function () {
+        if (!confirm('Diese Planung inkl. aller Rückmeldungen unwiderruflich löschen?')) return;
+        Backend.deleteEvent({ eventId: eventId, adminToken: adminToken }).then(function () {
+          removeMyEvent(eventId);
+          toast('Planung gelöscht.', 'ok');
+          location.href = baseUrl();
+        }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
+      });
+
+      var editCard = qs('#edit-card');
+      qs('#toggle-edit').addEventListener('click', function () {
+        var show = editCard.style.display === 'none';
+        editCard.style.display = show ? '' : 'none';
+        if (show) {
+          renderCreateForm(qs('#edit-body'), event);
+          editCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+      qs('#save-edit').addEventListener('click', function () {
+        var body = qs('#edit-body');
+        var payload = {
+          eventId: eventId,
+          adminToken: adminToken,
+          title: qs('#ev-title', body).value.trim(),
+          description: qs('#ev-desc', body).value.trim(),
+          location: qs('#ev-location', body).value.trim(),
+          shifts: readShiftRows(qs('#shift-rows', body))
+        };
+        if (!payload.title) { toast('Bitte einen Titel eingeben.', 'err'); return; }
+        Backend.updateEvent(payload).then(function () {
+          toast('Planung aktualisiert.', 'ok');
+          refresh();
+        }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
+      });
+    }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
+  }
+
+  /* ============================================================
+   * ROUTER
+   * ============================================================ */
+  function route() {
+    var params = new URLSearchParams(location.search);
+    var hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+    var eventId = params.get('event');
+    var adminToken = hashParams.get('admin');
+    var view = params.get('view');
+    var respId = params.get('resp');
+    var editToken = params.get('edit');
+    var justCreated = params.get('created') === '1';
+
+    if (!eventId) { renderStart(); return; }
+    if (adminToken) { renderAdmin(eventId, adminToken, justCreated); return; }
+    if (view === 'results') { renderResultsOnly(eventId); return; }
+    renderParticipant(eventId, respId, editToken);
+  }
+
+  document.addEventListener('DOMContentLoaded', route);
+  // Navigating between a URL with and without a #admin=... fragment (e.g. helper
+  // link -> admin link in the same tab) only changes the hash, so the browser
+  // does not reload the document / refire DOMContentLoaded. Re-route manually.
+  window.addEventListener('hashchange', route);
+  window.addEventListener('popstate', route);
+})();
+</script>
+</body>
+</html>
