@@ -146,6 +146,7 @@
   .badge-warn { background: var(--fw-warn-bg); color: var(--fw-warn); }
   .badge-error { background: var(--fw-error-bg); color: var(--fw-error); }
   .badge-closed { background: var(--fw-grey-200); color: var(--fw-grey-700); }
+  .badge-owner { background: #ede7f6; color: #512da8; }
 
   .answer-group { display: flex; gap: 8px; flex-wrap: wrap; }
   .answer-btn { flex: 1; min-width: 90px; padding: 9px 10px; border-radius: var(--radius-sm); border: 1.5px solid var(--fw-grey-300); background: var(--fw-white); cursor: pointer; font-weight: 700; font-size: 14px; font-family: inherit; color: var(--fw-grey-700); transition: all .12s; text-align: center; }
@@ -194,7 +195,8 @@
   .toast.err { background: var(--fw-error); }
   .toast.ok { background: var(--fw-success); }
   .spinner-row { display: flex; align-items: center; gap: 10px; color: var(--fw-grey-500); padding: 30px 0; justify-content: center; font-size: 14px; }
-  .lock-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: var(--fw-grey-700); }
+  .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--fw-success); margin-right: 5px; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
   footer { background: var(--fw-black); color: var(--fw-grey-300); text-align: center; padding: 24px 16px; font-size: 13px; }
   footer a { color: var(--fw-gold); text-decoration: none; }
@@ -226,23 +228,44 @@
   <div style="margin-top:4px;">E-Mail: <a href="mailto:verein@feuerwehr-lorsbach.de">verein@feuerwehr-lorsbach.de</a> · <a href="https://www.feuerwehr-lorsbach.de">www.feuerwehr-lorsbach.de</a></div>
 </footer>
 
+<!--
+  Firebase (kostenlose "Spark"-Stufe) übernimmt die geräteübergreifende
+  Speicherung. Ohne eingetragene Projekt-Konfiguration (siehe Skript unten,
+  FIREBASE_CONFIG) werden diese Dateien zwar geladen, aber nie benutzt – die
+  Seite läuft dann automatisch im lokalen Demo-Modus.
+-->
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+
 <script>
 (function () {
   'use strict';
 
   /* ============================================================
    * KONFIGURATION
-   * Nach Einrichtung des Google-Apps-Script-Backends (siehe README,
-   * Abschnitt "Helferplanung einrichten") hier die Web-App-URL eintragen.
-   * Solange SCRIPT_URL leer ist, läuft die Seite im Demo-Modus: alle
-   * Daten werden nur lokal im Browser gespeichert (localStorage) und
-   * sind NICHT zwischen Geräten sichtbar.
+   * Nach Einrichtung des Firebase-Projekts (siehe README, Abschnitt
+   * "Helferplanung einrichten") hier die Firebase-Projektkonfiguration
+   * eintragen, z. B.:
+   *   var FIREBASE_CONFIG = {
+   *     apiKey: "AIzaSy...", authDomain: "meinprojekt.firebaseapp.com",
+   *     projectId: "meinprojekt", storageBucket: "meinprojekt.appspot.com",
+   *     messagingSenderId: "...", appId: "..."
+   *   };
+   * Diese Werte sind bei Firebase bewusst öffentlich (sie stehen in jeder
+   * Firebase-Web-App) – die eigentliche Absicherung übernehmen die
+   * Firestore-Security-Rules aus der README, nicht die Geheimhaltung
+   * dieser Konfiguration.
+   *
+   * Solange FIREBASE_CONFIG null ist, läuft die Seite im Demo-Modus: alle
+   * Daten werden nur lokal im Browser gespeichert (localStorage) und sind
+   * NICHT zwischen Geräten sichtbar.
    * ============================================================ */
-  var SCRIPT_URL = '';
+  var FIREBASE_CONFIG = null;
 
-  var LS_DB = 'fwl_helfer_db_v1';
-  var LS_MYEVENTS = 'fwl_helfer_myevents_v1';
-  var LS_RESP_PREFIX = 'fwl_helfer_resp_';
+  var LS_DEVICE_UID = 'fwl_helfer_device_uid';
+  var LS_DB = 'fwl_helfer_localdb_v2';
+  var LS_MYEVENTS = 'fwl_helfer_myevents_v2';
 
   /* ---------------- Utilities ---------------- */
   function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -300,130 +323,244 @@
 
   function baseUrl() { return location.origin + location.pathname; }
 
-  /* ---------------- Backend ---------------- */
-  var Backend = (function () {
-    var useRemote = !!SCRIPT_URL;
+  function getLocalDeviceUid() {
+    var v = localStorage.getItem(LS_DEVICE_UID);
+    if (!v) { v = uid(); localStorage.setItem(LS_DEVICE_UID, v); }
+    return v;
+  }
 
+  function normalizeShifts(rawShifts) {
+    return (rawShifts || []).map(function (s) {
+      return {
+        id: s.id || uid(),
+        title: String(s.title || '').trim(),
+        date: String(s.date || ''),
+        timeFrom: String(s.timeFrom || ''),
+        timeTo: String(s.timeTo || ''),
+        location: String(s.location || ''),
+        neededHelpers: Math.max(1, parseInt(s.neededHelpers, 10) || 1),
+        notes: String(s.notes || '')
+      };
+    }).filter(function (s) { return s.title; });
+  }
+
+  /* ---------------- Backend ----------------
+   * "Besitz" einer Planung (Admin-Rechte) bzw. einer eigenen Rückmeldung
+   * wird nicht mehr über ein Geheim-Token in der URL geregelt, sondern über
+   * eine Geräte-Identität: im Firebase-Modus die anonyme Firebase-Auth-UID
+   * dieses Browsers (bleibt gespeichert, bis Website-Daten gelöscht
+   * werden), im Demo-Modus eine lokal erzeugte Kennung. Das bedeutet:
+   * Admin-Zugriff ist an das Gerät gebunden, auf dem die Planung erstellt
+   * wurde (siehe README).
+   */
+  var Backend = (function () {
+    var useRemote = !!FIREBASE_CONFIG;
+    var db = null, auth = null, authReadyPromise = null;
+
+    if (useRemote) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      authReadyPromise = new Promise(function (resolve, reject) {
+        var unsub = auth.onAuthStateChanged(function (user) {
+          if (user) { unsub(); resolve(user.uid); }
+        }, reject);
+        auth.signInAnonymously().catch(reject);
+      });
+    }
+
+    function currentUid() { return useRemote ? authReadyPromise : Promise.resolve(getLocalDeviceUid()); }
+
+    /* ---------- Firestore (remote) ---------- */
+    function remoteCreateEvent(body) {
+      return currentUid().then(function (myUid) {
+        var title = String(body.title || '').trim();
+        if (!title) throw new Error('Titel fehlt');
+        var shifts = normalizeShifts(body.shifts);
+        if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
+        var ref = db.collection('events').doc();
+        var data = {
+          ownerUid: myUid, title: title, description: body.description || '', location: body.location || '',
+          shifts: shifts, active: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        return ref.set(data).then(function () { return { eventId: ref.id, event: Object.assign({ eventId: ref.id }, data) }; });
+      });
+    }
+    function remoteUpdateEvent(body) {
+      return currentUid().then(function () {
+        var shifts = normalizeShifts(body.shifts);
+        if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
+        var updates = {
+          title: String(body.title || '').trim(), description: body.description || '', location: body.location || '',
+          shifts: shifts, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (body.active !== undefined) updates.active = !!body.active;
+        return db.collection('events').doc(body.eventId).update(updates).then(function () { return { ok: true }; });
+      });
+    }
+    function remoteDeleteEvent(body) {
+      return currentUid().then(function () {
+        var evRef = db.collection('events').doc(body.eventId);
+        return evRef.collection('responses').get().then(function (qs) {
+          var batch = db.batch();
+          qs.docs.forEach(function (d) { batch.delete(d.ref); });
+          batch.delete(evRef);
+          return batch.commit();
+        }).then(function () { return { deleted: true }; });
+      });
+    }
+    function remoteGetEvent(eventId) {
+      var evRef = db.collection('events').doc(eventId);
+      return evRef.get().then(function (snap) {
+        if (!snap.exists) throw new Error('Planung nicht gefunden');
+        var event = Object.assign({ eventId: snap.id }, snap.data());
+        return evRef.collection('responses').get().then(function (qs) {
+          var responses = qs.docs.map(function (d) { return Object.assign({ responseId: d.id }, d.data()); });
+          return { event: event, responses: responses };
+        });
+      });
+    }
+    function remoteSubmitResponse(body) {
+      return currentUid().then(function (myUid) {
+        var name = String(body.name || '').trim();
+        if (!name) throw new Error('Name fehlt');
+        var evRef = db.collection('events').doc(body.eventId);
+        var respCol = evRef.collection('responses');
+        return respCol.where('ownerUid', '==', myUid).limit(1).get().then(function (existing) {
+          var now = firebase.firestore.FieldValue.serverTimestamp();
+          var data = { ownerUid: myUid, name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, updatedAt: now };
+          if (!existing.empty) {
+            var docRef = existing.docs[0].ref;
+            return docRef.update(data).then(function () { return { responseId: docRef.id }; });
+          }
+          data.createdAt = now;
+          return respCol.add(data).then(function (ref) { return { responseId: ref.id }; });
+        });
+      });
+    }
+    function remoteDeleteResponse(body) {
+      return currentUid().then(function () {
+        return db.collection('events').doc(body.eventId).collection('responses').doc(body.responseId).delete().then(function () { return { deleted: true }; });
+      });
+    }
+    function remoteWatchEvent(eventId, cb, onError) {
+      var evRef = db.collection('events').doc(eventId);
+      var latestEvent = null, latestResponses = null;
+      function emit() { if (latestEvent) cb({ event: latestEvent, responses: latestResponses || [] }); }
+      var unsub1 = evRef.onSnapshot(function (snap) {
+        if (!snap.exists) { onError && onError(new Error('Planung nicht gefunden')); return; }
+        latestEvent = Object.assign({ eventId: snap.id }, snap.data());
+        emit();
+      }, onError);
+      var unsub2 = evRef.collection('responses').onSnapshot(function (qsnap) {
+        latestResponses = qsnap.docs.map(function (d) { return Object.assign({ responseId: d.id }, d.data()); });
+        emit();
+      }, onError);
+      return function () { unsub1(); unsub2(); };
+    }
+
+    /* ---------- Lokaler Demo-Modus (localStorage) ---------- */
     function loadDb() {
       try { return JSON.parse(localStorage.getItem(LS_DB)) || { events: {}, responses: {} }; }
       catch (e) { return { events: {}, responses: {} }; }
     }
-    function saveDb(db) { localStorage.setItem(LS_DB, JSON.stringify(db)); }
-
-    function remotePost(action, payload) {
-      var body = Object.assign({ action: action }, payload);
-      return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) })
-        .then(function (r) { return r.json(); })
-        .then(function (j) { if (!j.ok) throw new Error(j.error || 'Serverfehler'); return j.data; });
-    }
-    function remoteGet(params) {
-      var usp = new URLSearchParams(params);
-      return fetch(SCRIPT_URL + '?' + usp.toString())
-        .then(function (r) { return r.json(); })
-        .then(function (j) { if (!j.ok) throw new Error(j.error || 'Serverfehler'); return j.data; });
-    }
-
-    function normalizeShifts(rawShifts, oldShiftsById) {
-      oldShiftsById = oldShiftsById || {};
-      return (rawShifts || []).map(function (s) {
-        var id = (s.id && oldShiftsById[s.id]) ? s.id : (s.id || uid());
-        return {
-          id: id,
-          title: String(s.title || '').trim(),
-          date: String(s.date || ''),
-          timeFrom: String(s.timeFrom || ''),
-          timeTo: String(s.timeTo || ''),
-          location: String(s.location || ''),
-          neededHelpers: Math.max(1, parseInt(s.neededHelpers, 10) || 1),
-          notes: String(s.notes || '')
-        };
-      }).filter(function (s) { return s.title; });
-    }
-    function stripEv(ev) { var c = Object.assign({}, ev); delete c.adminToken; return c; }
-    function stripResp(r) { var c = Object.assign({}, r); delete c.editToken; return c; }
+    function saveDb(dbObj) { localStorage.setItem(LS_DB, JSON.stringify(dbObj)); dispatchEvent(new Event('fwl-local-db-change')); }
 
     function localCreateEvent(body) {
-      var db = loadDb();
-      var eventId = uid(), adminToken = uid(), now = nowIso();
+      var myUid = getLocalDeviceUid();
+      var title = String(body.title || '').trim();
+      if (!title) throw new Error('Titel fehlt');
       var shifts = normalizeShifts(body.shifts);
-      if (!body.title || !String(body.title).trim()) throw new Error('Titel fehlt');
       if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
-      var event = { eventId: eventId, adminToken: adminToken, title: String(body.title).trim(), description: body.description || '', location: body.location || '', shifts: shifts, active: true, createdAt: now, updatedAt: now };
-      db.events[eventId] = event; saveDb(db);
-      return { eventId: eventId, adminToken: adminToken, event: stripEv(event) };
+      var dbObj = loadDb();
+      var eventId = uid(), now = nowIso();
+      var event = { eventId: eventId, ownerUid: myUid, title: title, description: body.description || '', location: body.location || '', shifts: shifts, active: true, createdAt: now, updatedAt: now };
+      dbObj.events[eventId] = event; saveDb(dbObj);
+      return { eventId: eventId, event: event };
     }
     function localUpdateEvent(body) {
-      var db = loadDb(); var ev = db.events[body.eventId];
+      var dbObj = loadDb(); var ev = dbObj.events[body.eventId];
       if (!ev) throw new Error('Planung nicht gefunden');
-      if (ev.adminToken !== body.adminToken) throw new Error('Kein Zugriff (ungültiger Admin-Link)');
-      var oldShiftsById = {}; ev.shifts.forEach(function (s) { oldShiftsById[s.id] = s; });
-      var shifts = normalizeShifts(body.shifts, oldShiftsById);
+      if (ev.ownerUid !== getLocalDeviceUid()) throw new Error('Kein Admin-Zugriff von diesem Gerät');
+      var shifts = normalizeShifts(body.shifts);
       if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
       Object.assign(ev, {
-        title: body.title !== undefined ? String(body.title).trim() : ev.title,
-        description: body.description !== undefined ? body.description : ev.description,
-        location: body.location !== undefined ? body.location : ev.location,
-        shifts: shifts,
-        active: body.active !== undefined ? !!body.active : ev.active,
-        updatedAt: nowIso()
+        title: String(body.title || '').trim(), description: body.description || '', location: body.location || '',
+        shifts: shifts, active: body.active !== undefined ? !!body.active : ev.active, updatedAt: nowIso()
       });
-      saveDb(db);
-      return { event: stripEv(ev) };
+      saveDb(dbObj);
+      return { ok: true };
     }
     function localDeleteEvent(body) {
-      var db = loadDb(); var ev = db.events[body.eventId];
+      var dbObj = loadDb(); var ev = dbObj.events[body.eventId];
       if (!ev) return { deleted: true };
-      if (ev.adminToken !== body.adminToken) throw new Error('Kein Zugriff');
-      delete db.events[body.eventId];
-      Object.keys(db.responses).forEach(function (id) { if (db.responses[id].eventId === body.eventId) delete db.responses[id]; });
-      saveDb(db);
+      if (ev.ownerUid !== getLocalDeviceUid()) throw new Error('Kein Admin-Zugriff von diesem Gerät');
+      delete dbObj.events[body.eventId];
+      Object.keys(dbObj.responses).forEach(function (id) { if (dbObj.responses[id].eventId === body.eventId) delete dbObj.responses[id]; });
+      saveDb(dbObj);
       return { deleted: true };
     }
     function localGetEvent(eventId) {
-      var db = loadDb(); var ev = db.events[eventId];
+      var dbObj = loadDb(); var ev = dbObj.events[eventId];
       if (!ev) throw new Error('Planung nicht gefunden');
-      var responses = Object.keys(db.responses).map(function (k) { return db.responses[k]; })
-        .filter(function (r) { return r.eventId === eventId; }).map(stripResp);
-      return { event: stripEv(ev), responses: responses };
+      var responses = Object.keys(dbObj.responses).map(function (k) { return dbObj.responses[k]; }).filter(function (r) { return r.eventId === eventId; });
+      return { event: ev, responses: responses };
     }
     function localSubmitResponse(body) {
-      var db = loadDb(); var ev = db.events[body.eventId];
+      var myUid = getLocalDeviceUid();
+      var dbObj = loadDb(); var ev = dbObj.events[body.eventId];
       if (!ev) throw new Error('Planung nicht gefunden');
       if (ev.active === false) throw new Error('Diese Helferplanung ist geschlossen – es werden keine neuen Zusagen mehr angenommen.');
-      if (!body.name || !String(body.name).trim()) throw new Error('Name fehlt');
-      var resp = null;
-      if (body.editToken) {
-        resp = Object.keys(db.responses).map(function (k) { return db.responses[k]; })
-          .find(function (r) { return r.eventId === body.eventId && r.editToken === body.editToken; });
-      }
+      var name = String(body.name || '').trim();
+      if (!name) throw new Error('Name fehlt');
+      var resp = Object.keys(dbObj.responses).map(function (k) { return dbObj.responses[k]; })
+        .find(function (r) { return r.eventId === body.eventId && r.ownerUid === myUid; });
       var now = nowIso();
       if (resp) {
-        Object.assign(resp, { name: String(body.name).trim(), contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, updatedAt: now });
+        Object.assign(resp, { name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, updatedAt: now });
       } else {
-        resp = { responseId: uid(), eventId: body.eventId, editToken: uid(), name: String(body.name).trim(), contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, createdAt: now, updatedAt: now };
-        db.responses[resp.responseId] = resp;
+        resp = { responseId: uid(), eventId: body.eventId, ownerUid: myUid, name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, createdAt: now, updatedAt: now };
+        dbObj.responses[resp.responseId] = resp;
       }
-      saveDb(db);
-      return { responseId: resp.responseId, editToken: resp.editToken };
+      saveDb(dbObj);
+      return { responseId: resp.responseId };
     }
     function localDeleteResponse(body) {
-      var db = loadDb(); var r = db.responses[body.responseId];
+      var dbObj = loadDb(); var r = dbObj.responses[body.responseId];
       if (!r) return { deleted: true };
-      var ev = db.events[body.eventId];
-      var allowed = (r.editToken && r.editToken === body.editToken) || (ev && ev.adminToken === body.adminToken);
+      var ev = dbObj.events[body.eventId];
+      var myUid = getLocalDeviceUid();
+      var allowed = r.ownerUid === myUid || (ev && ev.ownerUid === myUid);
       if (!allowed) throw new Error('Kein Zugriff');
-      delete db.responses[body.responseId]; saveDb(db);
+      delete dbObj.responses[body.responseId]; saveDb(dbObj);
       return { deleted: true };
+    }
+    function localWatchEvent(eventId, cb, onError) {
+      function push() {
+        try { cb(localGetEvent(eventId)); }
+        catch (e) { onError && onError(e); }
+      }
+      push();
+      var handler = function () { push(); };
+      window.addEventListener('fwl-local-db-change', handler);
+      window.addEventListener('storage', handler);
+      return function () {
+        window.removeEventListener('fwl-local-db-change', handler);
+        window.removeEventListener('storage', handler);
+      };
     }
 
     return {
       isRemote: useRemote,
-      createEvent: function (body) { return useRemote ? remotePost('createEvent', body) : Promise.resolve().then(function () { return localCreateEvent(body); }); },
-      updateEvent: function (body) { return useRemote ? remotePost('updateEvent', body) : Promise.resolve().then(function () { return localUpdateEvent(body); }); },
-      deleteEvent: function (body) { return useRemote ? remotePost('deleteEvent', body) : Promise.resolve().then(function () { return localDeleteEvent(body); }); },
-      getEvent: function (eventId) { return useRemote ? remoteGet({ action: 'getEvent', eventId: eventId }) : Promise.resolve().then(function () { return localGetEvent(eventId); }); },
-      submitResponse: function (body) { return useRemote ? remotePost('submitResponse', body) : Promise.resolve().then(function () { return localSubmitResponse(body); }); },
-      deleteResponse: function (body) { return useRemote ? remotePost('deleteResponse', body) : Promise.resolve().then(function () { return localDeleteResponse(body); }); }
+      getCurrentUid: currentUid,
+      createEvent: useRemote ? remoteCreateEvent : function (b) { return Promise.resolve().then(function () { return localCreateEvent(b); }); },
+      updateEvent: useRemote ? remoteUpdateEvent : function (b) { return Promise.resolve().then(function () { return localUpdateEvent(b); }); },
+      deleteEvent: useRemote ? remoteDeleteEvent : function (b) { return Promise.resolve().then(function () { return localDeleteEvent(b); }); },
+      getEvent: useRemote ? remoteGetEvent : function (id) { return Promise.resolve().then(function () { return localGetEvent(id); }); },
+      submitResponse: useRemote ? remoteSubmitResponse : function (b) { return Promise.resolve().then(function () { return localSubmitResponse(b); }); },
+      deleteResponse: useRemote ? remoteDeleteResponse : function (b) { return Promise.resolve().then(function () { return localDeleteResponse(b); }); },
+      watchEvent: useRemote ? remoteWatchEvent : localWatchEvent
     };
   })();
 
@@ -437,8 +574,6 @@
   function removeMyEvent(eventId) {
     localStorage.setItem(LS_MYEVENTS, JSON.stringify(loadMyEvents().filter(function (e) { return e.eventId !== eventId; })));
   }
-  function loadMyResponse(eventId) { try { return JSON.parse(localStorage.getItem(LS_RESP_PREFIX + eventId)) || null; } catch (e) { return null; } }
-  function saveMyResponse(eventId, data) { localStorage.setItem(LS_RESP_PREFIX + eventId, JSON.stringify(data)); }
 
   /* ---------------- Templates für Schichten ---------------- */
   var SHIFT_TEMPLATE = [
@@ -460,7 +595,7 @@
 
   function demoBanner() {
     if (Backend.isRemote) return '';
-    return '<div class="banner banner-warn"><strong>⚠️ Demo-Modus</strong>Diese Seite ist noch nicht mit dem geteilten Google-Sheet-Backend verbunden. Planungen und Zusagen werden nur lokal in diesem Browser gespeichert und sind für andere Geräte nicht sichtbar. Einrichtung siehe README, Abschnitt „Helferplanung einrichten“.</div>';
+    return '<div class="banner banner-warn"><strong>⚠️ Demo-Modus</strong>Diese Seite ist noch nicht mit dem gemeinsamen Firebase-Backend verbunden. Planungen und Zusagen werden nur lokal in diesem Browser gespeichert und sind für andere Geräte nicht sichtbar. Einrichtung siehe README, Abschnitt „Helferplanung einrichten“.</div>';
   }
 
   function errorCard(message) {
@@ -473,10 +608,10 @@
     var myEvents = loadMyEvents();
     var listHtml = '';
     if (myEvents.length) {
-      listHtml = '<div class="card"><div class="card-header"><h2>Deine Planungen auf diesem Gerät</h2><p>Nur auf diesem Browser sichtbar – Admin-Links bitte sicher aufbewahren.</p></div><div class="card-body">' +
+      listHtml = '<div class="card"><div class="card-header"><h2>Deine Planungen auf diesem Gerät</h2><p>Admin-Rechte sind an dieses Gerät gebunden und hier nur zur Orientierung aufgelistet.</p></div><div class="card-body">' +
         '<ul class="my-events-list" style="list-style:none;padding:0;margin:0;">' +
         myEvents.map(function (e) {
-          return '<li>📋 <a href="' + escapeHtml(e.adminUrl) + '">' + escapeHtml(e.title) + '</a> <span class="muted">· erstellt am ' + escapeHtml(new Date(e.createdAt).toLocaleDateString('de-DE')) + '</span></li>';
+          return '<li>📋 <a href="' + escapeHtml(baseUrl() + '?event=' + e.eventId) + '">' + escapeHtml(e.title) + '</a> <span class="muted">· erstellt am ' + escapeHtml(new Date(e.createdAt).toLocaleDateString('de-DE')) + '</span></li>';
         }).join('') + '</ul></div></div>';
     }
 
@@ -486,7 +621,7 @@
       '<div class="card-body" id="create-form-body"></div>' +
       '</div>' +
       '<div class="card"><div class="card-body" style="font-size:14px;color:var(--fw-grey-700);">' +
-      '<strong>Du hast einen Helfer-Link von der Feuerwehr bekommen?</strong><br>Öffne ihn direkt aus der Nachricht (WhatsApp/E-Mail) – auf dieser Seite selbst kannst du nur neue Planungen erstellen.' +
+      '<strong>Du hast einen Link von der Feuerwehr bekommen?</strong><br>Öffne ihn direkt aus der Nachricht (WhatsApp/E-Mail) – auf dieser Seite selbst kannst du nur neue Planungen erstellen.' +
       '</div></div>';
 
     renderCreateForm(qs('#create-form-body'));
@@ -583,8 +718,8 @@
         if (missingDate) { toast('Bitte bei jeder Schicht ein Datum angeben.', 'err'); return; }
         btn.disabled = true; btn.textContent = 'Wird erstellt …';
         Backend.createEvent(payload).then(function (data) {
-          saveMyEvent({ eventId: data.eventId, title: payload.title, createdAt: nowIso(), adminUrl: baseUrl() + '?event=' + data.eventId + '#admin=' + data.adminToken });
-          location.href = baseUrl() + '?event=' + data.eventId + '#admin=' + data.adminToken + '&created=1';
+          saveMyEvent({ eventId: data.eventId, title: payload.title, createdAt: nowIso() });
+          location.href = baseUrl() + '?event=' + data.eventId + '&created=1';
         }).catch(function (err) {
           toast(err.message || 'Fehler beim Erstellen.', 'err');
           btn.disabled = false; btn.textContent = 'Planung erstellen & Link generieren';
@@ -625,7 +760,7 @@
     var mode = container.getAttribute('data-view-mode') || 'table';
 
     var html = '<div class="results-toolbar">' +
-      '<div class="muted">' + responses.length + ' Rückmeldung' + (responses.length === 1 ? '' : 'en') + '</div>' +
+      '<div class="muted">' + (opts.live ? '<span class="live-dot"></span>' : '') + responses.length + ' Rückmeldung' + (responses.length === 1 ? '' : 'en') + '</div>' +
       '<div class="view-toggle"><button data-mode="table" class="' + (mode === 'table' ? 'active' : '') + '">Tabelle</button><button data-mode="grouped" class="' + (mode === 'grouped' ? 'active' : '') + '">Nach Schicht</button></div>' +
       '</div>';
 
@@ -673,32 +808,31 @@
       qsa('.del-btn', container).forEach(function (b) {
         b.addEventListener('click', function () {
           if (!confirm('Diese Rückmeldung wirklich löschen?')) return;
-          Backend.deleteResponse({ eventId: event.eventId, responseId: b.getAttribute('data-resp-id'), adminToken: opts.adminToken })
-            .then(function () { toast('Rückmeldung gelöscht.', 'ok'); opts.onChange && opts.onChange(); })
+          Backend.deleteResponse({ eventId: event.eventId, responseId: b.getAttribute('data-resp-id') })
+            .then(function () { toast('Rückmeldung gelöscht.', 'ok'); })
             .catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
         });
       });
     }
   }
 
-  /* ---------- Teilnehmer-Ansicht ---------- */
-  function renderParticipant(eventId, urlRespId, urlEditToken) {
-    app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Helferplanung …</div>';
-    Backend.getEvent(eventId).then(function (data) {
-      var event = data.event, responses = data.responses;
-      var mine = null;
-      if (urlEditToken) {
-        mine = { responseId: urlRespId, editToken: urlEditToken };
-        var found = responses.find(function (r) { return r.responseId === urlRespId; });
-        if (found) mine = Object.assign({}, found, { editToken: urlEditToken });
-      } else {
-        var stored = loadMyResponse(eventId);
-        if (stored) {
-          var found2 = responses.find(function (r) { return r.responseId === stored.responseId; });
-          mine = found2 ? Object.assign({}, found2, { editToken: stored.editToken }) : null;
-        }
-      }
+  /* ---------------- Live-Verwaltung: nur eine aktive Watch-Subscription ---------------- */
+  var stopCurrentWatch = null;
+  function setWatch(unsub) {
+    if (stopCurrentWatch) { try { stopCurrentWatch(); } catch (e) { /* ignore */ } }
+    stopCurrentWatch = unsub || null;
+  }
 
+  /* ---------- Planungs-Ansicht (Helfer-Formular + ggf. Verwaltung) ---------- */
+  function renderEventPage(eventId, justCreated) {
+    app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Helferplanung …</div>';
+    Promise.all([Backend.getEvent(eventId), Backend.getCurrentUid()]).then(function (results) {
+      var data = results[0], myUid = results[1];
+      var event = data.event, responses = data.responses;
+      var isOwner = event.ownerUid === myUid;
+      var mine = responses.find(function (r) { return r.ownerUid === myUid; }) || null;
+
+      var createdBanner = justCreated ? '<div class="banner banner-success"><strong>🎉 Planung erstellt!</strong>Teile jetzt den Link unten mit deiner Mannschaft.</div>' : '';
       var closedBanner = event.active === false ? '<div class="banner banner-warn"><strong>Diese Helferplanung ist geschlossen.</strong>Es werden keine neuen Zusagen mehr angenommen. Unten siehst du den aktuellen Stand.</div>' : '';
 
       var formHtml = '';
@@ -709,20 +843,45 @@
           '<div class="field"><label>Kontakt (Telefon/E-Mail, optional)</label><input type="text" id="p-contact" value="' + escapeHtml(mine ? mine.contact : '') + '" /></div></div>' +
           '<div id="p-shifts"></div>' +
           '<div class="field"><label>Anmerkung (optional)</label><textarea id="p-comment" placeholder="z. B. nur bis 18 Uhr">' + escapeHtml(mine ? mine.comment : '') + '</textarea></div>' +
-          '<p class="hint">Nicht ausgewählte Schichten werden beim Speichern als „Nein“ gewertet.</p>' +
+          '<p class="hint">Nicht ausgewählte Schichten werden beim Speichern als „Nein“ gewertet. Deine Zusage wird auf diesem Gerät automatisch wiedererkannt.</p>' +
           '</div><div class="card-footer"><button class="btn btn-primary" id="p-submit">' + (mine ? 'Änderungen speichern' : 'Zusage abschicken') + '</button></div></div>';
       }
 
-      app.innerHTML = demoBanner() + closedBanner +
-        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + '</h2>' +
+      var helperLink = baseUrl() + '?event=' + eventId;
+      var resultsLink = baseUrl() + '?event=' + eventId + '&view=results';
+
+      var adminHtml = '';
+      if (isOwner) {
+        adminHtml = '<div class="banner banner-info"><strong>🛠️ Du hast diese Planung erstellt</strong>Verwaltungsfunktionen sind nur auf diesem Gerät sichtbar.</div>' +
+          '<div class="card"><div class="card-header"><h2>Links zum Teilen</h2></div><div class="card-body">' +
+          '<div class="share-box"><div class="share-label">👥 Link zur Planung (zum Eintragen)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(helperLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(helperLink) + '" data-label="Link">Kopieren</button></div></div>' +
+          '<div class="share-box"><div class="share-label">📊 Ergebnis-Link (nur ansehen, für alle)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(resultsLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(resultsLink) + '" data-label="Ergebnis-Link">Kopieren</button></div></div>' +
+          '</div></div>' +
+          '<div class="card"><div class="card-header"><h2>Verwaltung' + (event.active === false ? ' <span class="badge badge-closed">Geschlossen</span>' : '') + '</h2></div>' +
+          '<div class="card-footer" style="justify-content:flex-start;">' +
+          '<button class="btn btn-secondary btn-inline" id="export-csv">⬇️ CSV exportieren</button>' +
+          '<button class="btn btn-secondary btn-inline" id="toggle-active">' + (event.active === false ? '🔓 Planung wieder öffnen' : '🔒 Planung schließen') + '</button>' +
+          '<button class="btn btn-ghost btn-inline" id="toggle-edit">✏️ Titel/Schichten bearbeiten</button>' +
+          '</div></div>' +
+          '<div class="card" id="edit-card" style="display:none;"><div class="card-header"><h2>Planung bearbeiten</h2></div><div class="card-body" id="edit-body"></div><div class="card-footer"><button class="btn btn-primary btn-inline" id="save-edit">Änderungen speichern</button></div></div>' +
+          '<div class="card"><div class="card-header"><h2 style="color:var(--fw-error);">Gefahrenzone</h2></div><div class="card-body"><button class="btn btn-danger btn-inline" id="delete-event">🗑 Planung endgültig löschen</button></div></div>';
+      }
+
+      app.innerHTML = demoBanner() + createdBanner + closedBanner +
+        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + (isOwner ? ' <span class="badge badge-owner">Deine Planung</span>' : '') + '</h2>' +
         (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') +
         (event.location ? '<p class="muted">📍 ' + escapeHtml(event.location) + '</p>' : '') +
         '</div></div>' +
         formHtml +
-        '<div class="card"><div class="card-header"><h2>Aktueller Stand</h2></div><div class="card-body" id="p-results"></div></div>' +
+        '<div class="card"><div class="card-header"><h2>Aktueller Stand</h2></div><div class="card-body" id="live-results"></div></div>' +
+        adminHtml +
         '<p style="text-align:center;"><a class="btn btn-ghost btn-inline" href="' + baseUrl() + '?event=' + eventId + '&view=results">🔍 Nur Ergebnisse ansehen (Link zum Teilen)</a></p>';
 
-      renderResultsBlock(qs('#p-results'), event, responses, {});
+      var resultsEl = qs('#live-results');
+      renderResultsBlock(resultsEl, event, responses, { admin: isOwner, live: true });
+      setWatch(Backend.watchEvent(eventId, function (d) {
+        if (qs('#live-results') === resultsEl) renderResultsBlock(resultsEl, d.event, d.responses, { admin: isOwner, live: true });
+      }, function (err) { toast(err.message || 'Verbindung zur Planung verloren.', 'err'); }));
 
       if (event.active !== false) {
         var shiftsEl = qs('#p-shifts');
@@ -761,40 +920,83 @@
             var sel = qs('.answer-btn.selected', card);
             ans[card.getAttribute('data-shift-id')] = sel ? sel.getAttribute('data-val') : 'no';
           });
-          var payload = {
-            eventId: eventId,
-            name: name,
-            contact: qs('#p-contact').value.trim(),
-            comment: qs('#p-comment').value.trim(),
-            answers: ans,
-            editToken: mine ? mine.editToken : undefined
-          };
+          var payload = { eventId: eventId, name: name, contact: qs('#p-contact').value.trim(), comment: qs('#p-comment').value.trim(), answers: ans };
           btn.disabled = true; btn.textContent = 'Wird gespeichert …';
-          Backend.submitResponse(payload).then(function (data) {
-            saveMyResponse(eventId, { responseId: data.responseId, editToken: data.editToken });
+          Backend.submitResponse(payload).then(function () {
             toast('Danke! Deine Zusage wurde gespeichert.', 'ok');
-            var personalLink = baseUrl() + '?event=' + eventId + '&resp=' + data.responseId + '&edit=' + data.editToken;
-            qs('.card-footer').insertAdjacentHTML('beforebegin', '<div class="share-box"><div class="share-label">🔗 Persönlicher Link zum späteren Ändern deiner Antwort</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(personalLink) + '"><button class="btn btn-secondary btn-sm btn-inline copy-personal">Kopieren</button></div><p class="hint">Speichere diesen Link, falls du deine Zusage später von einem anderen Gerät ändern möchtest.</p></div>');
-            qs('.copy-personal').addEventListener('click', function () { copyText(personalLink, 'Persönlicher Link'); });
-            renderParticipantRefreshResults(eventId);
+            btn.textContent = 'Änderungen speichern';
           }).catch(function (err) {
             toast(err.message || 'Fehler beim Speichern.', 'err');
-          }).finally(function () {
-            btn.disabled = false; btn.textContent = mine ? 'Änderungen speichern' : 'Zusage abschicken';
-          });
+            btn.textContent = mine ? 'Änderungen speichern' : 'Zusage abschicken';
+          }).finally(function () { btn.disabled = false; });
+        });
+      }
+
+      if (isOwner) {
+        qsa('[data-copy]').forEach(function (b) { b.addEventListener('click', function () { copyText(b.getAttribute('data-copy'), b.getAttribute('data-label')); }); });
+
+        qs('#export-csv').addEventListener('click', function () {
+          var cols = ['Name', 'Kontakt', 'Kommentar'].concat(event.shifts.map(function (s) { return s.title + ' (' + s.date + ')'; }));
+          var rows = [cols].concat(responses.map(function (r) {
+            return [r.name, r.contact || '', r.comment || ''].concat(event.shifts.map(function (s) {
+              var v = (r.answers || {})[s.id] || 'no';
+              return v === 'yes' ? 'Ja' : v === 'maybe' ? 'Vielleicht' : 'Nein';
+            }));
+          }));
+          var csv = rows.map(function (row) { return row.map(function (cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
+          var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'helferplanung-' + event.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.csv';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        });
+
+        qs('#toggle-active').addEventListener('click', function () {
+          var btn = this; btn.disabled = true;
+          Backend.updateEvent({ eventId: eventId, title: event.title, description: event.description, location: event.location, shifts: event.shifts, active: !(event.active !== false) })
+            .then(function () { toast('Status geändert.', 'ok'); renderEventPage(eventId, false); })
+            .catch(function (err) { toast(err.message || 'Fehler.', 'err'); btn.disabled = false; });
+        });
+
+        qs('#delete-event').addEventListener('click', function () {
+          if (!confirm('Diese Planung inkl. aller Rückmeldungen unwiderruflich löschen?')) return;
+          Backend.deleteEvent({ eventId: eventId }).then(function () {
+            removeMyEvent(eventId);
+            toast('Planung gelöscht.', 'ok');
+            location.href = baseUrl();
+          }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
+        });
+
+        var editCard = qs('#edit-card');
+        qs('#toggle-edit').addEventListener('click', function () {
+          var show = editCard.style.display === 'none';
+          editCard.style.display = show ? '' : 'none';
+          if (show) {
+            renderCreateForm(qs('#edit-body'), event);
+            editCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+        qs('#save-edit').addEventListener('click', function () {
+          var body = qs('#edit-body');
+          var payload = {
+            eventId: eventId,
+            title: qs('#ev-title', body).value.trim(),
+            description: qs('#ev-desc', body).value.trim(),
+            location: qs('#ev-location', body).value.trim(),
+            shifts: readShiftRows(qs('#shift-rows', body))
+          };
+          if (!payload.title) { toast('Bitte einen Titel eingeben.', 'err'); return; }
+          Backend.updateEvent(payload).then(function () {
+            toast('Planung aktualisiert.', 'ok');
+            renderEventPage(eventId, false);
+          }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
         });
       }
     }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
   }
 
-  function renderParticipantRefreshResults(eventId) {
-    Backend.getEvent(eventId).then(function (data) {
-      var box = qs('#p-results');
-      if (box) renderResultsBlock(box, data.event, data.responses, {});
-    });
-  }
-
-  /* ---------- Nur-Ergebnisse-Ansicht ---------- */
+  /* ---------- Nur-Ergebnisse-Ansicht (öffentlich, live, kein Formular) ---------- */
   function renderResultsOnly(eventId) {
     app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Ergebnisse …</div>';
     Backend.getEvent(eventId).then(function (data) {
@@ -804,106 +1006,11 @@
         (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') + '</div>' +
         '<div class="card-body" id="r-results"></div></div>' +
         '<p style="text-align:center;"><a class="btn btn-secondary btn-inline" href="' + baseUrl() + '?event=' + eventId + '">✏️ Selbst eintragen</a></p>';
-      renderResultsBlock(qs('#r-results'), event, data.responses, {});
-    }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
-  }
-
-  /* ---------- Admin-Ansicht ---------- */
-  function renderAdmin(eventId, adminToken, justCreated) {
-    app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Verwaltung …</div>';
-    Backend.getEvent(eventId).then(function (data) {
-      var event = data.event, responses = data.responses;
-      var helperLink = baseUrl() + '?event=' + eventId;
-      var resultsLink = baseUrl() + '?event=' + eventId + '&view=results';
-      var adminLink = baseUrl() + '?event=' + eventId + '#admin=' + adminToken;
-
-      var createdBanner = justCreated ? '<div class="banner banner-success"><strong>🎉 Planung erstellt!</strong>Teile jetzt den Helfer-Link mit deiner Mannschaft.</div>' : '';
-
-      app.innerHTML = demoBanner() + createdBanner +
-        '<div class="banner banner-info"><strong>🔒 Admin-Ansicht</strong>Diesen Link nicht öffentlich teilen – nur der Helfer-Link und der Ergebnis-Link sind für alle gedacht.</div>' +
-        '<div class="card"><div class="card-header"><h2>Links zum Teilen</h2></div><div class="card-body">' +
-        '<div class="share-box"><div class="share-label">👥 Helfer-Link (zum Eintragen)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(helperLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(helperLink) + '" data-label="Helfer-Link">Kopieren</button></div></div>' +
-        '<div class="share-box"><div class="share-label">📊 Ergebnis-Link (nur ansehen, für alle)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(resultsLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(resultsLink) + '" data-label="Ergebnis-Link">Kopieren</button></div></div>' +
-        '<div class="share-box admin"><div class="share-label">🔒 Admin-Link (nur für dich!)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(adminLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(adminLink) + '" data-label="Admin-Link">Kopieren</button></div></div>' +
-        '</div></div>' +
-
-        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + (event.active === false ? ' <span class="badge badge-closed">Geschlossen</span>' : '') + '</h2>' +
-        (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') + '</div>' +
-        '<div class="card-body" id="admin-results"></div>' +
-        '<div class="card-footer">' +
-        '<button class="btn btn-secondary btn-inline" id="export-csv">⬇️ CSV exportieren</button>' +
-        '<button class="btn btn-secondary btn-inline" id="toggle-active">' + (event.active === false ? '🔓 Planung wieder öffnen' : '🔒 Planung schließen') + '</button>' +
-        '<button class="btn btn-ghost btn-inline" id="toggle-edit">✏️ Titel/Schichten bearbeiten</button>' +
-        '</div></div>' +
-
-        '<div class="card" id="edit-card" style="display:none;"><div class="card-header"><h2>Planung bearbeiten</h2></div><div class="card-body" id="edit-body"></div><div class="card-footer"><button class="btn btn-primary btn-inline" id="save-edit">Änderungen speichern</button></div></div>' +
-
-        '<div class="card"><div class="card-header"><h2 style="color:var(--fw-error);">Gefahrenzone</h2></div><div class="card-body"><button class="btn btn-danger btn-inline" id="delete-event">🗑 Planung endgültig löschen</button></div></div>';
-
-      function refresh() { renderAdmin(eventId, adminToken, false); }
-
-      renderResultsBlock(qs('#admin-results'), event, responses, { admin: true, adminToken: adminToken, onChange: refresh });
-
-      qsa('[data-copy]').forEach(function (b) { b.addEventListener('click', function () { copyText(b.getAttribute('data-copy'), b.getAttribute('data-label')); }); });
-
-      qs('#export-csv').addEventListener('click', function () {
-        var cols = ['Name', 'Kontakt', 'Kommentar'].concat(event.shifts.map(function (s) { return s.title + ' (' + s.date + ')'; }));
-        var rows = [cols].concat(responses.map(function (r) {
-          return [r.name, r.contact || '', r.comment || ''].concat(event.shifts.map(function (s) {
-            var v = (r.answers || {})[s.id] || 'no';
-            return v === 'yes' ? 'Ja' : v === 'maybe' ? 'Vielleicht' : 'Nein';
-          }));
-        }));
-        var csv = rows.map(function (row) { return row.map(function (cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(';'); }).join('\r\n');
-        var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url; a.download = 'helferplanung-' + event.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '.csv';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
-      });
-
-      qs('#toggle-active').addEventListener('click', function () {
-        var btn = this; btn.disabled = true;
-        Backend.updateEvent({ eventId: eventId, adminToken: adminToken, title: event.title, description: event.description, location: event.location, shifts: event.shifts, active: !(event.active !== false) })
-          .then(function () { toast('Status geändert.', 'ok'); refresh(); })
-          .catch(function (err) { toast(err.message || 'Fehler.', 'err'); btn.disabled = false; });
-      });
-
-      qs('#delete-event').addEventListener('click', function () {
-        if (!confirm('Diese Planung inkl. aller Rückmeldungen unwiderruflich löschen?')) return;
-        Backend.deleteEvent({ eventId: eventId, adminToken: adminToken }).then(function () {
-          removeMyEvent(eventId);
-          toast('Planung gelöscht.', 'ok');
-          location.href = baseUrl();
-        }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
-      });
-
-      var editCard = qs('#edit-card');
-      qs('#toggle-edit').addEventListener('click', function () {
-        var show = editCard.style.display === 'none';
-        editCard.style.display = show ? '' : 'none';
-        if (show) {
-          renderCreateForm(qs('#edit-body'), event);
-          editCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
-      qs('#save-edit').addEventListener('click', function () {
-        var body = qs('#edit-body');
-        var payload = {
-          eventId: eventId,
-          adminToken: adminToken,
-          title: qs('#ev-title', body).value.trim(),
-          description: qs('#ev-desc', body).value.trim(),
-          location: qs('#ev-location', body).value.trim(),
-          shifts: readShiftRows(qs('#shift-rows', body))
-        };
-        if (!payload.title) { toast('Bitte einen Titel eingeben.', 'err'); return; }
-        Backend.updateEvent(payload).then(function () {
-          toast('Planung aktualisiert.', 'ok');
-          refresh();
-        }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
-      });
+      var resultsEl = qs('#r-results');
+      renderResultsBlock(resultsEl, event, data.responses, { live: true });
+      setWatch(Backend.watchEvent(eventId, function (d) {
+        if (qs('#r-results') === resultsEl) renderResultsBlock(resultsEl, d.event, d.responses, { live: true });
+      }, function (err) { toast(err.message || 'Verbindung zur Planung verloren.', 'err'); }));
     }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
   }
 
@@ -911,25 +1018,18 @@
    * ROUTER
    * ============================================================ */
   function route() {
+    setWatch(null);
     var params = new URLSearchParams(location.search);
-    var hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
     var eventId = params.get('event');
-    var adminToken = hashParams.get('admin');
     var view = params.get('view');
-    var respId = params.get('resp');
-    var editToken = params.get('edit');
     var justCreated = params.get('created') === '1';
 
     if (!eventId) { renderStart(); return; }
-    if (adminToken) { renderAdmin(eventId, adminToken, justCreated); return; }
     if (view === 'results') { renderResultsOnly(eventId); return; }
-    renderParticipant(eventId, respId, editToken);
+    renderEventPage(eventId, justCreated);
   }
 
   document.addEventListener('DOMContentLoaded', route);
-  // Navigating between a URL with and without a #admin=... fragment (e.g. helper
-  // link -> admin link in the same tab) only changes the hash, so the browser
-  // does not reload the document / refire DOMContentLoaded. Re-route manually.
   window.addEventListener('hashchange', route);
   window.addEventListener('popstate', route);
 })();
