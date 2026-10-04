@@ -16,3 +16,6 @@ desktop.ini
 # Temporary files
 *.tmp
 *.bak
+
+# Echte Zugangsdaten der Helferplanung (lokale Kopie von config.sample.php)
+api/config.php

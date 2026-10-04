@@ -51,50 +51,53 @@ Für die rechtsverbindliche Mitgliedschaft und das SEPA-Lastschriftmandat ist ei
 ### Funktionen
 
 - **Planung in wenigen Minuten erstellt**, inkl. Vorlage für typische Fest-Schichten (Auf-/Abbau, Ausschank, Kuchentheke, Kasse, Kinderprogramm, Ordnungsdienst …)
-- **Live-Ergebnisse**: Alle sehen in Echtzeit den Stand ("3 von 5 Helfern für den Grillstand"), ohne die Seite neu zu laden
-- **Zwei Links pro Planung**: ein Link zum Eintragen (öffnet ihn der Ersteller selbst, sieht er automatisch seine Verwaltungsfunktionen) und ein reiner Ergebnis-Link zum Teilen, z. B. in der Gruppen-Chat-Nachricht
+- **Aktueller Stand für alle sichtbar** ("3 von 5 Helfern für den Grillstand"), aktualisiert sich automatisch alle 15 Sekunden ohne Neuladen
+- **Zwei Links pro Planung**: ein Link zum Eintragen und ein reiner Ergebnis-Link zum Teilen, z. B. in der Gruppen-Chat-Nachricht
 - **Doodle-artige Übersicht** als Tabelle oder nach Schicht gruppiert, inkl. Bedarfsanzeige (grün/gelb/rot)
-- **Helfer werden auf ihrem Gerät automatisch wiedererkannt** und können ihre Zusage jederzeit ändern
-- **Admin-Funktionen**: Schichten nachträglich bearbeiten, einzelne Rückmeldungen löschen, Planung schließen/wieder öffnen, CSV-Export, Planung endgültig löschen
+- **Helfer werden auf ihrem Gerät automatisch wiedererkannt** und können ihre Zusage jederzeit ändern; ein persönlicher Link erlaubt das Ändern auch von einem anderen Gerät aus
+- **Ein gemeinsames Verwalter-Login** (Vereins-Passwort) schaltet alle Admin-Funktionen frei: Schichten nachträglich bearbeiten, einzelne Rückmeldungen löschen, Planung schließen/wieder öffnen, CSV-Export, Planung endgültig löschen
+- **Übersicht aller Planungen** nach dem Login – kein Zettel mit gesammelten Links nötig
 - **Mehrere Planungen parallel möglich** – wiederverwendbar für jede künftige Veranstaltung
-- **Mobile responsive**, keine Registrierung/Anmeldung/Passwort für Helfer nötig
-- **Self-contained** als einzelne HTML-Datei, wie der Mitgliedsantrag
+- **Mobile responsive**, keine Registrierung/Anmeldung für Helfer nötig
+- **Läuft auf dem eigenen Webspace** (PHP + MySQL) – keine Drittanbieter-Konten, kein CORS, Daten bleiben vollständig beim Verein
 
-### Wichtig: Backend für geräteübergreifende Nutzung nötig
+### Wichtig: PHP + MySQL nötig für geräteübergreifende Nutzung
 
-Damit alle Helfer von unterschiedlichen Geräten dieselbe Planung sehen und ausfüllen können, braucht die Seite einen gemeinsamen Speicherort für die Antworten. Da der Verein die Seite ohne eigenen Server betreibt, nutzt `helferplanung.html` dafür **Firebase** (Google) mit der kostenlosen „Spark“-Stufe: **Cloud Firestore** als Datenbank und **Firebase Authentication** (anonyme Anmeldung, ganz ohne Login-Bildschirm) zur Zugriffssteuerung.
+Damit alle Helfer von unterschiedlichen Geräten dieselbe Planung sehen und ausfüllen können, braucht die Seite einen gemeinsamen Speicherort für die Antworten. `helferplanung.html` nutzt dafür eine kleine **PHP-API** (`api/`-Ordner) mit einer **MySQL-Datenbank** – beides ist in den meisten IONOS-Webhosting-Paketen bereits enthalten, ganz ohne zusätzliche Kosten oder Drittanbieter-Konten.
 
-Solange kein Firebase-Projekt eingetragen ist, läuft die Seite automatisch im **Demo-Modus**: Alles funktioniert, aber Planungen und Zusagen werden nur lokal im jeweiligen Browser gespeichert (nicht geräteübergreifend sichtbar) – gut zum Ausprobieren, aber nicht für den echten Einsatz mit mehreren Helfern.
+Wird die Datei lokal ohne Server geöffnet (z. B. per Doppelklick, `file://`), läuft die Seite automatisch im **Demo-Modus**: Alles funktioniert zum Ausprobieren, Verwaltungsfunktionen sind dabei immer freigeschaltet, aber Daten werden nur lokal im Browser gespeichert. Nach dem Hochladen auf den echten Webserver wird automatisch die PHP-API verwendet – **ohne dass im Code irgendetwas eingetragen werden muss**, da Frontend und API auf derselben Domain liegen.
 
-**Wie „Admin-Rechte“ funktionieren:** Es gibt kein Passwort und kein Geheim-Link mehr. Stattdessen merkt sich der Browser, der eine Planung erstellt hat, das automatisch (anonyme Firebase-Anmeldung) – wer die Planung angelegt hat, sieht beim Öffnen des ganz normalen Planungs-Links auf *demselben Gerät* automatisch die Verwaltungsfunktionen. Das bedeutet auch: Admin-Zugriff ist an das Gerät/den Browser gebunden, auf dem die Planung erstellt wurde (ähnlich einem automatisch gespeicherten Login) – löscht man dort die Website-Daten, geht der Verwaltungszugriff verloren (die Planung selbst bleibt erhalten). Für mehrere Verwalter empfiehlt es sich, die Planung z. B. am gemeinsamen Vereinslaptop zu erstellen und zu pflegen.
+**Wie „Admin-Rechte“ funktionieren:** Ein gemeinsames Vereins-Passwort (in `api/config.php` festgelegt) schaltet per Login alle Verwaltungsfunktionen frei – für **alle** Planungen, nicht nur die selbst erstellten, und von **jedem Gerät** aus, auf dem man sich anmeldet. Helfer brauchen zum Eintragen kein Passwort.
 
-### Helferplanung einrichten (einmalig, ca. 10 Minuten)
+### Helferplanung einrichten (einmalig, ca. 10–15 Minuten)
 
-1. Auf [console.firebase.google.com](https://console.firebase.google.com) ein neues, kostenloses Projekt anlegen (z. B. „Feuerwehr Lorsbach Helferplanung“). Google Analytics kann dabei deaktiviert werden, wird nicht benötigt.
-2. Im Projekt links im Menü **Build → Firestore Database** öffnen, **Datenbank erstellen**, einen Standort in der Nähe wählen (z. B. `eur3 (europe-west)`) und im **Produktionsmodus** starten (die Standardregeln werden im nächsten Schritt ohnehin ersetzt).
-3. Im Reiter **Regeln** der Firestore-Datenbank den kompletten Inhalt der Datei [`firebase/firestore.rules`](firebase/firestore.rules) aus diesem Repository einfügen (vorhandenen Text ersetzen) und **Veröffentlichen** klicken.
-4. Links im Menü **Build → Authentication** öffnen, **Los geht's**, dann im Reiter **Sign-in method** den Anbieter **Anonym** auswählen und aktivieren (kein weiterer Login-Bildschirm nötig – Helfer merken davon nichts).
-5. Links im Zahnrad-Menü **Projekteinstellungen** öffnen, ganz unten bei „Meine Apps“ auf das Web-Symbol (`</>`) klicken, der neuen Web-App einen beliebigen Namen geben (z. B. „Helferplanung“) und registrieren – Firebase-Hosting wird dabei **nicht** benötigt.
-6. Firebase zeigt jetzt ein `firebaseConfig`-Objekt mit `apiKey`, `authDomain`, `projectId` usw. Diesen kompletten Block kopieren.
-7. In `helferplanung.html` ganz am Anfang des `<script>`-Bereichs die Zeile `var FIREBASE_CONFIG = null;` finden und durch die kopierte Konfiguration ersetzen, z. B.:
-   ```js
-   var FIREBASE_CONFIG = {
-     apiKey: "AIzaSy...", authDomain: "meinprojekt.firebaseapp.com",
-     projectId: "meinprojekt", storageBucket: "meinprojekt.appspot.com",
-     messagingSenderId: "1234567890", appId: "1:1234567890:web:abcdef"
-   };
+1. Im IONOS-Kundenbereich unter **MySQL-Datenbanken** eine Datenbank anlegen (falls noch keine vorhanden ist) und Host, Datenbankname, Benutzername und Passwort notieren.
+2. Diese Datenbank in **phpMyAdmin** öffnen (ebenfalls im IONOS-Kundenbereich erreichbar), Reiter **Importieren**, die Datei [`schema.sql`](schema.sql) aus diesem Repository hochladen und importieren. Das legt die beiden Tabellen `helfer_events` und `helfer_responses` an.
+3. Im Ordner `api/` die Datei `config.sample.php` kopieren und zu `config.php` umbenennen (im selben Ordner).
+4. `config.php` öffnen und die Platzhalter füllen:
+   ```php
+   return [
+     'db_host' => 'localhost',          // ggf. laut IONOS-Angabe anpassen
+     'db_name' => 'DEIN_DATENBANKNAME',
+     'db_user' => 'DEIN_DATENBANK_BENUTZER',
+     'db_pass' => 'DEIN_DATENBANK_PASSWORT',
+     'admin_password' => 'EIN-SICHERES-VEREINS-PASSWORT',
+   ];
    ```
-   Diese Werte sind bei Firebase bewusst öffentlich (sie stehen in jeder Firebase-Web-App und tauchen im Quelltext jeder Seite auf) – die eigentliche Absicherung übernehmen die Security-Rules aus Schritt 3, nicht die Geheimhaltung dieser Konfiguration.
-8. Datei speichern und hochladen/committen – die Helferplanung ist jetzt einsatzbereit und synchronisiert automatisch (in Echtzeit) über Firestore.
+   `admin_password` ist frei wählbar – das ist das gemeinsame Passwort, mit dem sich die Verwaltung (Planungen erstellen/bearbeiten/löschen) anmeldet.
+5. Alle Dateien per FTP/Datei-Manager auf den Webserver hochladen: `helferplanung.html` **und** den kompletten `api/`-Ordner (inkl. der frisch angelegten `config.php`) in denselben Ordner wie `index.html`.
+6. `helferplanung.html` im Browser öffnen, mit dem Vereins-Passwort anmelden und die erste Planung erstellen.
 
-Alle Planungen und Rückmeldungen landen in den Firestore-Sammlungen **„events“** und der jeweiligen Unter-Sammlung **„responses“** und können dort in der Firebase-Konsole jederzeit eingesehen werden.
+**Wichtig:** `api/config.php` enthält echte Zugangsdaten und ist deshalb in `.gitignore` eingetragen – sie landet nie im Git-Repository, sondern existiert nur auf dem Webserver bzw. lokal beim Einrichten.
+
+Alle Planungen und Rückmeldungen landen in den MySQL-Tabellen **`helfer_events`** und **`helfer_responses`** und können dort über phpMyAdmin jederzeit eingesehen werden; die Seite selbst bietet zusätzlich einen CSV-Export pro Planung.
 
 ### Workflow
 
-1. Organisator öffnet `helferplanung.html`, legt Titel, Beschreibung und Schichten an (optional per Vorlage vorausgefüllt) und erstellt die Planung.
-2. Die Seite zeigt sofort den **Planungs-Link** – dieser wird z. B. per WhatsApp/E-Mail an die Mannschaft verteilt. Da der Organisator die Planung selbst erstellt hat, sieht er auf seinem Gerät beim Öffnen desselben Links automatisch zusätzlich seine Verwaltungsfunktionen.
-3. Jeder Helfer öffnet den Link, trägt Name und pro Schicht Ja/Nein/Vielleicht ein und speichert. Öffnet derselbe Helfer den Link später erneut (gleiches Gerät), wird seine Zusage automatisch wiedererkannt und lässt sich bearbeiten.
-4. Alle sehen live den Stand über den **Ergebnis-Link**; der Organisator verwaltet direkt auf dem Planungs-Link (Schichten anpassen, Rückmeldungen löschen, Planung schließen, CSV-Export).
+1. Verwalter/in öffnet `helferplanung.html`, meldet sich mit dem Vereins-Passwort an, legt Titel, Beschreibung und Schichten an (optional per Vorlage vorausgefüllt) und erstellt die Planung.
+2. Die Seite zeigt sofort den **Link zur Planung** – dieser wird z. B. per WhatsApp/E-Mail an die Mannschaft verteilt.
+3. Jeder Helfer öffnet den Link (kein Login nötig), trägt Name und pro Schicht Ja/Nein/Vielleicht ein und speichert. Öffnet derselbe Helfer den Link später erneut (gleiches Gerät), wird seine Zusage automatisch wiedererkannt; über den nach dem Speichern angezeigten persönlichen Link lässt sie sich auch von einem anderen Gerät aus ändern.
+4. Alle sehen den aktuellen Stand über den **Ergebnis-Link**; die Verwaltung erreicht ihre Funktionen (Schichten anpassen, Rückmeldungen löschen, Planung schließen, CSV-Export) direkt auf dem Planungs-Link, sobald sie angemeldet ist – von jedem Gerät aus.
 
 ---
 

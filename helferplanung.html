@@ -69,9 +69,9 @@
   .header-title .eyebrow { font-size: 13px; font-weight: 700; opacity: 0.9; letter-spacing: 2px; margin-bottom: 4px; text-transform: uppercase; }
   .header-title h1 { margin: 0; font-size: clamp(19px, 3.2vw, 27px); line-height: 1.15; font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; }
   .header-title .subtitle { font-size: 14px; font-weight: 500; opacity: 0.95; margin-top: 5px; }
-  .header-link { margin-left: auto; flex-shrink: 0; }
-  .header-link a { color: var(--fw-white); opacity: 0.9; font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.5); }
-  .header-link a:hover { opacity: 1; }
+  .header-link { margin-left: auto; flex-shrink: 0; display: flex; align-items: center; gap: 14px; }
+  .header-link a, .header-link button { color: var(--fw-white); opacity: 0.9; font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.5); background: none; border-top: none; border-left: none; border-right: none; cursor: pointer; font-family: inherit; padding: 0; }
+  .header-link a:hover, .header-link button:hover { opacity: 1; }
 
   main { max-width: 900px; margin: 28px auto; padding: 0 16px 64px; }
 
@@ -99,7 +99,7 @@
   /* ---------- FORM ---------- */
   label { display: block; font-size: 13px; font-weight: 700; color: var(--fw-grey-900); margin-bottom: 5px; }
   .hint { font-size: 12px; color: var(--fw-grey-500); font-weight: 400; margin-top: 3px; }
-  input[type=text], input[type=date], input[type=time], input[type=number], input[type=tel], input[type=email], textarea, select {
+  input[type=text], input[type=password], input[type=date], input[type=time], input[type=number], input[type=tel], input[type=email], textarea, select {
     width: 100%; padding: 10px 12px; font-size: 15px; font-family: inherit;
     border: 1px solid var(--fw-grey-300); border-radius: var(--radius-sm); background: var(--fw-white); color: var(--fw-black);
   }
@@ -135,6 +135,11 @@
   .share-row { display: flex; gap: 8px; align-items: center; }
   .share-row input { font-size: 13px; background: var(--fw-white); color: var(--fw-grey-700); }
   .share-box.admin { border-color: var(--fw-gold); background: #fdf8ea; }
+
+  /* ---------- LOGIN ---------- */
+  .login-box { max-width: 360px; }
+  .login-row { display: flex; gap: 8px; }
+  .login-row input { flex: 1; }
 
   /* ---------- SHIFT DISPLAY (participant) ---------- */
   .shift-card { border: 1px solid var(--fw-grey-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; }
@@ -186,8 +191,6 @@
   /* ---------- MISC ---------- */
   .muted { color: var(--fw-grey-500); font-size: 13px; }
   .divider { border: none; border-top: 1px solid var(--fw-grey-200); margin: 20px 0; }
-  .start-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  @media (max-width: 640px) { .start-grid { grid-template-columns: 1fr; } }
   .my-events-list a { color: var(--fw-red); text-decoration: none; font-weight: 700; }
   .my-events-list li { margin-bottom: 6px; }
   #toast-wrap { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 8px; align-items: center; width: calc(100% - 32px); max-width: 420px; }
@@ -213,7 +216,9 @@
       <h1>Helferplanung</h1>
       <div class="subtitle">Schichten anlegen, Link teilen, Zusagen sammeln – 125&nbsp;Jahre Feuerwehr Lorsbach</div>
     </div>
-    <div class="header-link"><a href="index.html">Zum Mitgliedsantrag →</a></div>
+    <div class="header-link" id="header-auth">
+      <a href="index.html">Zum Mitgliedsantrag →</a>
+    </div>
   </div>
 </header>
 
@@ -228,44 +233,26 @@
   <div style="margin-top:4px;">E-Mail: <a href="mailto:verein@feuerwehr-lorsbach.de">verein@feuerwehr-lorsbach.de</a> · <a href="https://www.feuerwehr-lorsbach.de">www.feuerwehr-lorsbach.de</a></div>
 </footer>
 
-<!--
-  Firebase (kostenlose "Spark"-Stufe) übernimmt die geräteübergreifende
-  Speicherung. Ohne eingetragene Projekt-Konfiguration (siehe Skript unten,
-  FIREBASE_CONFIG) werden diese Dateien zwar geladen, aber nie benutzt – die
-  Seite läuft dann automatisch im lokalen Demo-Modus.
--->
-<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
-
 <script>
 (function () {
   'use strict';
 
   /* ============================================================
    * KONFIGURATION
-   * Nach Einrichtung des Firebase-Projekts (siehe README, Abschnitt
-   * "Helferplanung einrichten") hier die Firebase-Projektkonfiguration
-   * eintragen, z. B.:
-   *   var FIREBASE_CONFIG = {
-   *     apiKey: "AIzaSy...", authDomain: "meinprojekt.firebaseapp.com",
-   *     projectId: "meinprojekt", storageBucket: "meinprojekt.appspot.com",
-   *     messagingSenderId: "...", appId: "..."
-   *   };
-   * Diese Werte sind bei Firebase bewusst öffentlich (sie stehen in jeder
-   * Firebase-Web-App) – die eigentliche Absicherung übernehmen die
-   * Firestore-Security-Rules aus der README, nicht die Geheimhaltung
-   * dieser Konfiguration.
+   * Die Seite spricht per fetch() dieselbe Domain an (api/index.php) -
+   * nach dem Hochladen von helferplanung.html UND dem Ordner "api/" (siehe
+   * README, Abschnitt "Helferplanung einrichten") funktioniert das ohne
+   * weitere Konfiguration hier im Code.
    *
-   * Solange FIREBASE_CONFIG null ist, läuft die Seite im Demo-Modus: alle
-   * Daten werden nur lokal im Browser gespeichert (localStorage) und sind
-   * NICHT zwischen Geräten sichtbar.
+   * Wird die Datei lokal direkt im Browser geöffnet (file://, ohne PHP-
+   * Server), läuft die Seite automatisch im Demo-Modus: alle Daten werden
+   * nur lokal gespeichert, Verwaltungsfunktionen sind zum Ausprobieren
+   * immer freigeschaltet (kein echtes Login nötig).
    * ============================================================ */
-  var FIREBASE_CONFIG = null;
+  var API_BASE = 'api/index.php';
 
-  var LS_DEVICE_UID = 'fwl_helfer_device_uid';
-  var LS_DB = 'fwl_helfer_localdb_v2';
-  var LS_MYEVENTS = 'fwl_helfer_myevents_v2';
+  var LS_RESP_PREFIX = 'fwl_helfer_resp_';
+  var LS_DB = 'fwl_helfer_localdb_v3';
 
   /* ---------------- Utilities ---------------- */
   function qs(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -323,12 +310,6 @@
 
   function baseUrl() { return location.origin + location.pathname; }
 
-  function getLocalDeviceUid() {
-    var v = localStorage.getItem(LS_DEVICE_UID);
-    if (!v) { v = uid(); localStorage.setItem(LS_DEVICE_UID, v); }
-    return v;
-  }
-
   function normalizeShifts(rawShifts) {
     return (rawShifts || []).map(function (s) {
       return {
@@ -345,119 +326,30 @@
   }
 
   /* ---------------- Backend ----------------
-   * "Besitz" einer Planung (Admin-Rechte) bzw. einer eigenen Rückmeldung
-   * wird nicht mehr über ein Geheim-Token in der URL geregelt, sondern über
-   * eine Geräte-Identität: im Firebase-Modus die anonyme Firebase-Auth-UID
-   * dieses Browsers (bleibt gespeichert, bis Website-Daten gelöscht
-   * werden), im Demo-Modus eine lokal erzeugte Kennung. Das bedeutet:
-   * Admin-Zugriff ist an das Gerät gebunden, auf dem die Planung erstellt
-   * wurde (siehe README).
+   * Echter Betrieb: PHP-API (api/index.php) auf derselben Domain + MySQL.
+   * Verwaltungsrechte: ein gemeinsames Vereins-Passwort schaltet per
+   * Login-Session (Cookie) alle Verwaltungsfunktionen frei - für JEDE
+   * Planung, nicht pro Gerät. Eigene Rückmeldungen lassen sich zusätzlich
+   * ohne Login über ein persönliches "editToken" ändern/löschen, das beim
+   * ersten Absenden erzeugt wird (im Browser gespeichert + als
+   * persönlicher Link angezeigt, siehe renderEventPage).
+   *
+   * Demo-Modus (file://, kein Server): alles nur lokal in diesem Browser,
+   * Verwaltungsfunktionen sind dort immer freigeschaltet.
    */
   var Backend = (function () {
-    var useRemote = !!FIREBASE_CONFIG;
-    var db = null, auth = null, authReadyPromise = null;
+    var useRemote = location.protocol !== 'file:';
 
-    if (useRemote) {
-      firebase.initializeApp(FIREBASE_CONFIG);
-      db = firebase.firestore();
-      auth = firebase.auth();
-      authReadyPromise = new Promise(function (resolve, reject) {
-        var unsub = auth.onAuthStateChanged(function (user) {
-          if (user) { unsub(); resolve(user.uid); }
-        }, reject);
-        auth.signInAnonymously().catch(reject);
-      });
+    function apiGet(params) {
+      var usp = new URLSearchParams(params);
+      return fetch(API_BASE + '?' + usp.toString(), { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (!j.ok) throw new Error(j.error || 'Serverfehler'); return j.data; });
     }
-
-    function currentUid() { return useRemote ? authReadyPromise : Promise.resolve(getLocalDeviceUid()); }
-
-    /* ---------- Firestore (remote) ---------- */
-    function remoteCreateEvent(body) {
-      return currentUid().then(function (myUid) {
-        var title = String(body.title || '').trim();
-        if (!title) throw new Error('Titel fehlt');
-        var shifts = normalizeShifts(body.shifts);
-        if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
-        var ref = db.collection('events').doc();
-        var data = {
-          ownerUid: myUid, title: title, description: body.description || '', location: body.location || '',
-          shifts: shifts, active: true,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        return ref.set(data).then(function () { return { eventId: ref.id, event: Object.assign({ eventId: ref.id }, data) }; });
-      });
-    }
-    function remoteUpdateEvent(body) {
-      return currentUid().then(function () {
-        var shifts = normalizeShifts(body.shifts);
-        if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
-        var updates = {
-          title: String(body.title || '').trim(), description: body.description || '', location: body.location || '',
-          shifts: shifts, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        if (body.active !== undefined) updates.active = !!body.active;
-        return db.collection('events').doc(body.eventId).update(updates).then(function () { return { ok: true }; });
-      });
-    }
-    function remoteDeleteEvent(body) {
-      return currentUid().then(function () {
-        var evRef = db.collection('events').doc(body.eventId);
-        return evRef.collection('responses').get().then(function (qs) {
-          var batch = db.batch();
-          qs.docs.forEach(function (d) { batch.delete(d.ref); });
-          batch.delete(evRef);
-          return batch.commit();
-        }).then(function () { return { deleted: true }; });
-      });
-    }
-    function remoteGetEvent(eventId) {
-      var evRef = db.collection('events').doc(eventId);
-      return evRef.get().then(function (snap) {
-        if (!snap.exists) throw new Error('Planung nicht gefunden');
-        var event = Object.assign({ eventId: snap.id }, snap.data());
-        return evRef.collection('responses').get().then(function (qs) {
-          var responses = qs.docs.map(function (d) { return Object.assign({ responseId: d.id }, d.data()); });
-          return { event: event, responses: responses };
-        });
-      });
-    }
-    function remoteSubmitResponse(body) {
-      return currentUid().then(function (myUid) {
-        var name = String(body.name || '').trim();
-        if (!name) throw new Error('Name fehlt');
-        var evRef = db.collection('events').doc(body.eventId);
-        var respCol = evRef.collection('responses');
-        return respCol.where('ownerUid', '==', myUid).limit(1).get().then(function (existing) {
-          var now = firebase.firestore.FieldValue.serverTimestamp();
-          var data = { ownerUid: myUid, name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, updatedAt: now };
-          if (!existing.empty) {
-            var docRef = existing.docs[0].ref;
-            return docRef.update(data).then(function () { return { responseId: docRef.id }; });
-          }
-          data.createdAt = now;
-          return respCol.add(data).then(function (ref) { return { responseId: ref.id }; });
-        });
-      });
-    }
-    function remoteDeleteResponse(body) {
-      return currentUid().then(function () {
-        return db.collection('events').doc(body.eventId).collection('responses').doc(body.responseId).delete().then(function () { return { deleted: true }; });
-      });
-    }
-    function remoteWatchEvent(eventId, cb, onError) {
-      var evRef = db.collection('events').doc(eventId);
-      var latestEvent = null, latestResponses = null;
-      function emit() { if (latestEvent) cb({ event: latestEvent, responses: latestResponses || [] }); }
-      var unsub1 = evRef.onSnapshot(function (snap) {
-        if (!snap.exists) { onError && onError(new Error('Planung nicht gefunden')); return; }
-        latestEvent = Object.assign({ eventId: snap.id }, snap.data());
-        emit();
-      }, onError);
-      var unsub2 = evRef.collection('responses').onSnapshot(function (qsnap) {
-        latestResponses = qsnap.docs.map(function (d) { return Object.assign({ responseId: d.id }, d.data()); });
-        emit();
-      }, onError);
-      return function () { unsub1(); unsub2(); };
+    function apiPost(body) {
+      return fetch(API_BASE, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json(); })
+        .then(function (j) { if (!j.ok) throw new Error(j.error || 'Serverfehler'); return j.data; });
     }
 
     /* ---------- Lokaler Demo-Modus (localStorage) ---------- */
@@ -465,24 +357,34 @@
       try { return JSON.parse(localStorage.getItem(LS_DB)) || { events: {}, responses: {} }; }
       catch (e) { return { events: {}, responses: {} }; }
     }
-    function saveDb(dbObj) { localStorage.setItem(LS_DB, JSON.stringify(dbObj)); dispatchEvent(new Event('fwl-local-db-change')); }
+    function saveDb(dbObj) { localStorage.setItem(LS_DB, JSON.stringify(dbObj)); }
+    function stripToken(r) { var c = Object.assign({}, r); delete c.editToken; return c; }
 
+    function localLogin() { return Promise.resolve({ loggedIn: true }); }
+    function localLogout() { return Promise.resolve({ loggedIn: true }); }
+    function localGetSession() { return Promise.resolve({ loggedIn: true }); }
+    function localListEvents() {
+      var dbObj = loadDb();
+      return Promise.resolve(Object.keys(dbObj.events).map(function (id) {
+        var ev = dbObj.events[id];
+        var count = Object.keys(dbObj.responses).filter(function (rid) { return dbObj.responses[rid].eventId === id; }).length;
+        return { eventId: ev.eventId, title: ev.title, active: ev.active, createdAt: ev.createdAt, responseCount: count };
+      }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; }));
+    }
     function localCreateEvent(body) {
-      var myUid = getLocalDeviceUid();
       var title = String(body.title || '').trim();
       if (!title) throw new Error('Titel fehlt');
       var shifts = normalizeShifts(body.shifts);
       if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
       var dbObj = loadDb();
       var eventId = uid(), now = nowIso();
-      var event = { eventId: eventId, ownerUid: myUid, title: title, description: body.description || '', location: body.location || '', shifts: shifts, active: true, createdAt: now, updatedAt: now };
+      var event = { eventId: eventId, title: title, description: body.description || '', location: body.location || '', shifts: shifts, active: true, createdAt: now, updatedAt: now };
       dbObj.events[eventId] = event; saveDb(dbObj);
-      return { eventId: eventId, event: event };
+      return Promise.resolve({ eventId: eventId, event: event });
     }
     function localUpdateEvent(body) {
       var dbObj = loadDb(); var ev = dbObj.events[body.eventId];
       if (!ev) throw new Error('Planung nicht gefunden');
-      if (ev.ownerUid !== getLocalDeviceUid()) throw new Error('Kein Admin-Zugriff von diesem Gerät');
       var shifts = normalizeShifts(body.shifts);
       if (!shifts.length) throw new Error('Mindestens eine Schicht wird benötigt');
       Object.assign(ev, {
@@ -490,90 +392,66 @@
         shifts: shifts, active: body.active !== undefined ? !!body.active : ev.active, updatedAt: nowIso()
       });
       saveDb(dbObj);
-      return { ok: true };
+      return Promise.resolve({ ok: true });
     }
     function localDeleteEvent(body) {
-      var dbObj = loadDb(); var ev = dbObj.events[body.eventId];
-      if (!ev) return { deleted: true };
-      if (ev.ownerUid !== getLocalDeviceUid()) throw new Error('Kein Admin-Zugriff von diesem Gerät');
+      var dbObj = loadDb();
       delete dbObj.events[body.eventId];
       Object.keys(dbObj.responses).forEach(function (id) { if (dbObj.responses[id].eventId === body.eventId) delete dbObj.responses[id]; });
       saveDb(dbObj);
-      return { deleted: true };
+      return Promise.resolve({ deleted: true });
     }
     function localGetEvent(eventId) {
       var dbObj = loadDb(); var ev = dbObj.events[eventId];
       if (!ev) throw new Error('Planung nicht gefunden');
-      var responses = Object.keys(dbObj.responses).map(function (k) { return dbObj.responses[k]; }).filter(function (r) { return r.eventId === eventId; });
-      return { event: ev, responses: responses };
+      var responses = Object.keys(dbObj.responses).map(function (k) { return dbObj.responses[k]; })
+        .filter(function (r) { return r.eventId === eventId; }).map(stripToken);
+      return Promise.resolve({ event: ev, responses: responses });
     }
     function localSubmitResponse(body) {
-      var myUid = getLocalDeviceUid();
       var dbObj = loadDb(); var ev = dbObj.events[body.eventId];
       if (!ev) throw new Error('Planung nicht gefunden');
       if (ev.active === false) throw new Error('Diese Helferplanung ist geschlossen – es werden keine neuen Zusagen mehr angenommen.');
       var name = String(body.name || '').trim();
       if (!name) throw new Error('Name fehlt');
-      var resp = Object.keys(dbObj.responses).map(function (k) { return dbObj.responses[k]; })
-        .find(function (r) { return r.eventId === body.eventId && r.ownerUid === myUid; });
+      var resp = null;
+      if (body.editToken) {
+        resp = Object.keys(dbObj.responses).map(function (k) { return dbObj.responses[k]; })
+          .find(function (r) { return r.eventId === body.eventId && r.editToken === body.editToken; });
+      }
       var now = nowIso();
       if (resp) {
         Object.assign(resp, { name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, updatedAt: now });
       } else {
-        resp = { responseId: uid(), eventId: body.eventId, ownerUid: myUid, name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, createdAt: now, updatedAt: now };
+        resp = { responseId: uid(), eventId: body.eventId, editToken: uid(), name: name, contact: body.contact || '', comment: body.comment || '', answers: body.answers || {}, createdAt: now, updatedAt: now };
         dbObj.responses[resp.responseId] = resp;
       }
       saveDb(dbObj);
-      return { responseId: resp.responseId };
+      return Promise.resolve({ responseId: resp.responseId, editToken: resp.editToken });
     }
     function localDeleteResponse(body) {
-      var dbObj = loadDb(); var r = dbObj.responses[body.responseId];
-      if (!r) return { deleted: true };
-      var ev = dbObj.events[body.eventId];
-      var myUid = getLocalDeviceUid();
-      var allowed = r.ownerUid === myUid || (ev && ev.ownerUid === myUid);
-      if (!allowed) throw new Error('Kein Zugriff');
+      var dbObj = loadDb();
       delete dbObj.responses[body.responseId]; saveDb(dbObj);
-      return { deleted: true };
-    }
-    function localWatchEvent(eventId, cb, onError) {
-      function push() {
-        try { cb(localGetEvent(eventId)); }
-        catch (e) { onError && onError(e); }
-      }
-      push();
-      var handler = function () { push(); };
-      window.addEventListener('fwl-local-db-change', handler);
-      window.addEventListener('storage', handler);
-      return function () {
-        window.removeEventListener('fwl-local-db-change', handler);
-        window.removeEventListener('storage', handler);
-      };
+      return Promise.resolve({ deleted: true });
     }
 
     return {
       isRemote: useRemote,
-      getCurrentUid: currentUid,
-      createEvent: useRemote ? remoteCreateEvent : function (b) { return Promise.resolve().then(function () { return localCreateEvent(b); }); },
-      updateEvent: useRemote ? remoteUpdateEvent : function (b) { return Promise.resolve().then(function () { return localUpdateEvent(b); }); },
-      deleteEvent: useRemote ? remoteDeleteEvent : function (b) { return Promise.resolve().then(function () { return localDeleteEvent(b); }); },
-      getEvent: useRemote ? remoteGetEvent : function (id) { return Promise.resolve().then(function () { return localGetEvent(id); }); },
-      submitResponse: useRemote ? remoteSubmitResponse : function (b) { return Promise.resolve().then(function () { return localSubmitResponse(b); }); },
-      deleteResponse: useRemote ? remoteDeleteResponse : function (b) { return Promise.resolve().then(function () { return localDeleteResponse(b); }); },
-      watchEvent: useRemote ? remoteWatchEvent : localWatchEvent
+      login: function (password) { return useRemote ? apiPost({ action: 'login', password: password }) : localLogin(); },
+      logout: function () { return useRemote ? apiPost({ action: 'logout' }) : localLogout(); },
+      getSession: function () { return useRemote ? apiGet({ action: 'session' }) : localGetSession(); },
+      listEvents: function () { return useRemote ? apiGet({ action: 'listEvents' }) : localListEvents(); },
+      createEvent: function (b) { return useRemote ? apiPost(Object.assign({ action: 'createEvent' }, b)) : localCreateEvent(b); },
+      updateEvent: function (b) { return useRemote ? apiPost(Object.assign({ action: 'updateEvent' }, b)) : localUpdateEvent(b); },
+      deleteEvent: function (b) { return useRemote ? apiPost(Object.assign({ action: 'deleteEvent' }, b)) : localDeleteEvent(b); },
+      getEvent: function (id) { return useRemote ? apiGet({ action: 'getEvent', id: id }) : localGetEvent(id); },
+      submitResponse: function (b) { return useRemote ? apiPost(Object.assign({ action: 'submitResponse' }, b)) : localSubmitResponse(b); },
+      deleteResponse: function (b) { return useRemote ? apiPost(Object.assign({ action: 'deleteResponse' }, b)) : localDeleteResponse(b); }
     };
   })();
 
-  /* ---------------- "Meine Planungen" (lokal, pro Browser) ---------------- */
-  function loadMyEvents() { try { return JSON.parse(localStorage.getItem(LS_MYEVENTS)) || []; } catch (e) { return []; } }
-  function saveMyEvent(entry) {
-    var list = loadMyEvents().filter(function (e) { return e.eventId !== entry.eventId; });
-    list.unshift(entry);
-    localStorage.setItem(LS_MYEVENTS, JSON.stringify(list.slice(0, 30)));
-  }
-  function removeMyEvent(eventId) {
-    localStorage.setItem(LS_MYEVENTS, JSON.stringify(loadMyEvents().filter(function (e) { return e.eventId !== eventId; })));
-  }
+  function loadMyResponse(eventId) { try { return JSON.parse(localStorage.getItem(LS_RESP_PREFIX + eventId)) || null; } catch (e) { return null; } }
+  function saveMyResponse(eventId, data) { localStorage.setItem(LS_RESP_PREFIX + eventId, JSON.stringify(data)); }
 
   /* ---------------- Templates für Schichten ---------------- */
   var SHIFT_TEMPLATE = [
@@ -592,10 +470,11 @@
    * VIEWS
    * ============================================================ */
   var app = qs('#app');
+  var sessionCache = null; // {loggedIn:bool}, re-geladen pro Routenwechsel
 
   function demoBanner() {
     if (Backend.isRemote) return '';
-    return '<div class="banner banner-warn"><strong>⚠️ Demo-Modus</strong>Diese Seite ist noch nicht mit dem gemeinsamen Firebase-Backend verbunden. Planungen und Zusagen werden nur lokal in diesem Browser gespeichert und sind für andere Geräte nicht sichtbar. Einrichtung siehe README, Abschnitt „Helferplanung einrichten“.</div>';
+    return '<div class="banner banner-warn"><strong>⚠️ Demo-Modus</strong>Diese Seite läuft lokal ohne Server (z. B. direkt aus einer Datei geöffnet). Planungen und Zusagen werden nur in diesem Browser gespeichert; Verwaltungsfunktionen sind zum Ausprobieren immer freigeschaltet. Nach dem Hochladen auf den Webserver (siehe README, Abschnitt „Helferplanung einrichten“) läuft alles echt über die MySQL-Datenbank.</div>';
   }
 
   function errorCard(message) {
@@ -603,28 +482,75 @@
       '<a class="btn btn-secondary" href="' + baseUrl() + '">← Zur Startseite</a>';
   }
 
+  function renderHeaderAuth() {
+    var el = qs('#header-auth');
+    var extra = sessionCache && sessionCache.loggedIn
+      ? '<span>🔑 Als Verwalter/in angemeldet</span><button type="button" id="header-logout">Abmelden</button>'
+      : '';
+    el.innerHTML = extra + '<a href="index.html">Zum Mitgliedsantrag →</a>';
+    var logoutBtn = qs('#header-logout', el);
+    if (logoutBtn) logoutBtn.addEventListener('click', function () {
+      Backend.logout().then(function () { sessionCache = { loggedIn: false }; toast('Abgemeldet.', 'ok'); route(); });
+    });
+  }
+
+  /** Kompaktes Login-Formular, einbettbar in jede Ansicht. */
+  function renderLoginBox(container, onSuccess) {
+    container.innerHTML = '<div class="login-box"><label>Verwalter-Passwort</label>' +
+      '<div class="login-row"><input type="password" id="login-pw" placeholder="Vereins-Passwort" /><button type="button" class="btn btn-primary btn-inline" id="login-submit">Anmelden</button></div>' +
+      '<p class="hint">Nur für die Organisation nötig – Helfer brauchen kein Passwort.</p></div>';
+    function submit() {
+      var btn = qs('#login-submit', container);
+      var pw = qs('#login-pw', container).value;
+      if (!pw) { toast('Bitte Passwort eingeben.', 'err'); return; }
+      btn.disabled = true;
+      Backend.login(pw).then(function () {
+        sessionCache = { loggedIn: true };
+        toast('Angemeldet.', 'ok');
+        onSuccess();
+      }).catch(function (err) {
+        toast(err.message || 'Login fehlgeschlagen.', 'err');
+        btn.disabled = false;
+      });
+    }
+    qs('#login-submit', container).addEventListener('click', submit);
+    qs('#login-pw', container).addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+  }
+
   /* ---------- Start ---------- */
   function renderStart() {
-    var myEvents = loadMyEvents();
-    var listHtml = '';
-    if (myEvents.length) {
-      listHtml = '<div class="card"><div class="card-header"><h2>Deine Planungen auf diesem Gerät</h2><p>Admin-Rechte sind an dieses Gerät gebunden und hier nur zur Orientierung aufgelistet.</p></div><div class="card-body">' +
-        '<ul class="my-events-list" style="list-style:none;padding:0;margin:0;">' +
-        myEvents.map(function (e) {
-          return '<li>📋 <a href="' + escapeHtml(baseUrl() + '?event=' + e.eventId) + '">' + escapeHtml(e.title) + '</a> <span class="muted">· erstellt am ' + escapeHtml(new Date(e.createdAt).toLocaleDateString('de-DE')) + '</span></li>';
-        }).join('') + '</ul></div></div>';
-    }
+    Backend.getSession().then(function (session) {
+      sessionCache = session;
+      renderHeaderAuth();
+      if (!session.loggedIn) {
+        app.innerHTML = demoBanner() +
+          '<div class="card"><div class="card-header"><h2>Verwalter-Login</h2><p>Zum Anlegen neuer Helferplanungen bitte mit dem Vereins-Passwort anmelden.</p></div><div class="card-body" id="login-area"></div></div>' +
+          '<div class="card"><div class="card-body" style="font-size:14px;color:var(--fw-grey-700);">' +
+          '<strong>Du hast einen Link von der Feuerwehr bekommen?</strong><br>Öffne ihn direkt aus der Nachricht (WhatsApp/E-Mail) – zum Eintragen als Helfer ist kein Login nötig.' +
+          '</div></div>';
+        renderLoginBox(qs('#login-area'), renderStart);
+        return;
+      }
 
-    app.innerHTML = demoBanner() + listHtml +
-      '<div class="card">' +
-      '<div class="card-header"><h2>Neue Helferplanung erstellen</h2><p>Lege Schichten an und erhalte sofort einen Link zum Teilen – Helfer tragen sich direkt ein, wie bei Doodle.</p></div>' +
-      '<div class="card-body" id="create-form-body"></div>' +
-      '</div>' +
-      '<div class="card"><div class="card-body" style="font-size:14px;color:var(--fw-grey-700);">' +
-      '<strong>Du hast einen Link von der Feuerwehr bekommen?</strong><br>Öffne ihn direkt aus der Nachricht (WhatsApp/E-Mail) – auf dieser Seite selbst kannst du nur neue Planungen erstellen.' +
-      '</div></div>';
+      app.innerHTML = demoBanner() +
+        '<div class="card"><div class="card-header"><h2>Alle Helferplanungen</h2></div><div class="card-body" id="all-events"><div class="spinner-row">Lädt…</div></div></div>' +
+        '<div class="card">' +
+        '<div class="card-header"><h2>Neue Helferplanung erstellen</h2><p>Lege Schichten an und erhalte sofort einen Link zum Teilen – Helfer tragen sich direkt ein, wie bei Doodle.</p></div>' +
+        '<div class="card-body" id="create-form-body"></div>' +
+        '</div>';
+      renderCreateForm(qs('#create-form-body'));
 
-    renderCreateForm(qs('#create-form-body'));
+      Backend.listEvents().then(function (events) {
+        var box = qs('#all-events');
+        if (!events.length) { box.innerHTML = '<p class="muted">Noch keine Planung vorhanden.</p>'; return; }
+        box.innerHTML = '<ul class="my-events-list" style="list-style:none;padding:0;margin:0;">' +
+          events.map(function (e) {
+            return '<li>📋 <a href="' + escapeHtml(baseUrl() + '?event=' + e.eventId) + '">' + escapeHtml(e.title) + '</a>' +
+              (e.active === false ? ' <span class="badge badge-closed">Geschlossen</span>' : '') +
+              ' <span class="muted">· ' + e.responseCount + ' Rückmeldung' + (e.responseCount === 1 ? '' : 'en') + ' · erstellt am ' + escapeHtml(new Date(e.createdAt).toLocaleDateString('de-DE')) + '</span></li>';
+          }).join('') + '</ul>';
+      }).catch(function (err) { qs('#all-events').innerHTML = '<p class="muted">Konnte Liste nicht laden: ' + escapeHtml(err.message) + '</p>'; });
+    }).catch(function (err) { errorCard(err.message || 'Fehler beim Laden.'); });
   }
 
   function shiftRowHtml(idx, shift) {
@@ -718,7 +644,6 @@
         if (missingDate) { toast('Bitte bei jeder Schicht ein Datum angeben.', 'err'); return; }
         btn.disabled = true; btn.textContent = 'Wird erstellt …';
         Backend.createEvent(payload).then(function (data) {
-          saveMyEvent({ eventId: data.eventId, title: payload.title, createdAt: nowIso() });
           location.href = baseUrl() + '?event=' + data.eventId + '&created=1';
         }).catch(function (err) {
           toast(err.message || 'Fehler beim Erstellen.', 'err');
@@ -809,28 +734,30 @@
         b.addEventListener('click', function () {
           if (!confirm('Diese Rückmeldung wirklich löschen?')) return;
           Backend.deleteResponse({ eventId: event.eventId, responseId: b.getAttribute('data-resp-id') })
-            .then(function () { toast('Rückmeldung gelöscht.', 'ok'); })
+            .then(function () { toast('Rückmeldung gelöscht.', 'ok'); opts.onChange && opts.onChange(); })
             .catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
         });
       });
     }
   }
 
-  /* ---------------- Live-Verwaltung: nur eine aktive Watch-Subscription ---------------- */
-  var stopCurrentWatch = null;
-  function setWatch(unsub) {
-    if (stopCurrentWatch) { try { stopCurrentWatch(); } catch (e) { /* ignore */ } }
-    stopCurrentWatch = unsub || null;
-  }
+  /* ---------------- Live-ish Updates: einfaches Polling ---------------- */
+  var pollTimer = null;
+  function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+  function startPolling(fn, ms) { stopPolling(); pollTimer = setInterval(fn, ms || 15000); }
 
   /* ---------- Planungs-Ansicht (Helfer-Formular + ggf. Verwaltung) ---------- */
   function renderEventPage(eventId, justCreated) {
     app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Helferplanung …</div>';
-    Promise.all([Backend.getEvent(eventId), Backend.getCurrentUid()]).then(function (results) {
-      var data = results[0], myUid = results[1];
+    Promise.all([Backend.getEvent(eventId), Backend.getSession()]).then(function (results) {
+      var data = results[0]; sessionCache = results[1];
+      renderHeaderAuth();
       var event = data.event, responses = data.responses;
-      var isOwner = event.ownerUid === myUid;
-      var mine = responses.find(function (r) { return r.ownerUid === myUid; }) || null;
+      var isAdmin = !!sessionCache.loggedIn;
+
+      var stored = loadMyResponse(eventId);
+      var mine = stored ? (responses.find(function (r) { return r.responseId === stored.responseId; }) || null) : null;
+      if (mine) mine = Object.assign({}, mine, { editToken: stored.editToken });
 
       var createdBanner = justCreated ? '<div class="banner banner-success"><strong>🎉 Planung erstellt!</strong>Teile jetzt den Link unten mit deiner Mannschaft.</div>' : '';
       var closedBanner = event.active === false ? '<div class="banner banner-warn"><strong>Diese Helferplanung ist geschlossen.</strong>Es werden keine neuen Zusagen mehr angenommen. Unten siehst du den aktuellen Stand.</div>' : '';
@@ -843,7 +770,7 @@
           '<div class="field"><label>Kontakt (Telefon/E-Mail, optional)</label><input type="text" id="p-contact" value="' + escapeHtml(mine ? mine.contact : '') + '" /></div></div>' +
           '<div id="p-shifts"></div>' +
           '<div class="field"><label>Anmerkung (optional)</label><textarea id="p-comment" placeholder="z. B. nur bis 18 Uhr">' + escapeHtml(mine ? mine.comment : '') + '</textarea></div>' +
-          '<p class="hint">Nicht ausgewählte Schichten werden beim Speichern als „Nein“ gewertet. Deine Zusage wird auf diesem Gerät automatisch wiedererkannt.</p>' +
+          '<p class="hint">Nicht ausgewählte Schichten werden beim Speichern als „Nein“ gewertet.</p>' +
           '</div><div class="card-footer"><button class="btn btn-primary" id="p-submit">' + (mine ? 'Änderungen speichern' : 'Zusage abschicken') + '</button></div></div>';
       }
 
@@ -851,9 +778,10 @@
       var resultsLink = baseUrl() + '?event=' + eventId + '&view=results';
 
       var adminHtml = '';
-      if (isOwner) {
-        adminHtml = '<div class="banner banner-info"><strong>🛠️ Du hast diese Planung erstellt</strong>Verwaltungsfunktionen sind nur auf diesem Gerät sichtbar.</div>' +
-          '<div class="card"><div class="card-header"><h2>Links zum Teilen</h2></div><div class="card-body">' +
+      if (!isAdmin) {
+        adminHtml = '<div class="card"><div class="card-header"><h2>Verwalter-Login</h2><p>Zum Bearbeiten dieser Planung bitte anmelden.</p></div><div class="card-body" id="login-area"></div></div>';
+      } else {
+        adminHtml = '<div class="card"><div class="card-header"><h2>Links zum Teilen</h2></div><div class="card-body">' +
           '<div class="share-box"><div class="share-label">👥 Link zur Planung (zum Eintragen)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(helperLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(helperLink) + '" data-label="Link">Kopieren</button></div></div>' +
           '<div class="share-box"><div class="share-label">📊 Ergebnis-Link (nur ansehen, für alle)</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(resultsLink) + '"><button class="btn btn-secondary btn-sm btn-inline" data-copy="' + escapeHtml(resultsLink) + '" data-label="Ergebnis-Link">Kopieren</button></div></div>' +
           '</div></div>' +
@@ -868,7 +796,7 @@
       }
 
       app.innerHTML = demoBanner() + createdBanner + closedBanner +
-        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + (isOwner ? ' <span class="badge badge-owner">Deine Planung</span>' : '') + '</h2>' +
+        '<div class="card"><div class="card-header"><h2>' + escapeHtml(event.title) + (isAdmin ? ' <span class="badge badge-owner">Verwalter-Ansicht</span>' : '') + '</h2>' +
         (event.description ? '<p>' + escapeHtml(event.description) + '</p>' : '') +
         (event.location ? '<p class="muted">📍 ' + escapeHtml(event.location) + '</p>' : '') +
         '</div></div>' +
@@ -877,11 +805,24 @@
         adminHtml +
         '<p style="text-align:center;"><a class="btn btn-ghost btn-inline" href="' + baseUrl() + '?event=' + eventId + '&view=results">🔍 Nur Ergebnisse ansehen (Link zum Teilen)</a></p>';
 
+      renderHeaderAuth();
       var resultsEl = qs('#live-results');
-      renderResultsBlock(resultsEl, event, responses, { admin: isOwner, live: true });
-      setWatch(Backend.watchEvent(eventId, function (d) {
-        if (qs('#live-results') === resultsEl) renderResultsBlock(resultsEl, d.event, d.responses, { admin: isOwner, live: true });
-      }, function (err) { toast(err.message || 'Verbindung zur Planung verloren.', 'err'); }));
+      function refreshResults() {
+        Backend.getEvent(eventId).then(function (d) {
+          renderResultsBlock(resultsEl, d.event, d.responses, { admin: isAdmin, live: Backend.isRemote, onChange: refreshResults });
+        }).catch(function () { /* nächster Poll versucht es erneut */ });
+      }
+      renderResultsBlock(resultsEl, event, responses, { admin: isAdmin, live: Backend.isRemote, onChange: refreshResults });
+      if (Backend.isRemote) {
+        startPolling(function () {
+          if (qs('#live-results') !== resultsEl) { stopPolling(); return; }
+          refreshResults();
+        }, 15000);
+      }
+
+      if (!isAdmin) {
+        renderLoginBox(qs('#login-area'), function () { renderEventPage(eventId, false); });
+      }
 
       if (event.active !== false) {
         var shiftsEl = qs('#p-shifts');
@@ -920,11 +861,18 @@
             var sel = qs('.answer-btn.selected', card);
             ans[card.getAttribute('data-shift-id')] = sel ? sel.getAttribute('data-val') : 'no';
           });
-          var payload = { eventId: eventId, name: name, contact: qs('#p-contact').value.trim(), comment: qs('#p-comment').value.trim(), answers: ans };
+          var payload = { eventId: eventId, name: name, contact: qs('#p-contact').value.trim(), comment: qs('#p-comment').value.trim(), answers: ans, editToken: mine ? mine.editToken : undefined };
           btn.disabled = true; btn.textContent = 'Wird gespeichert …';
-          Backend.submitResponse(payload).then(function () {
+          Backend.submitResponse(payload).then(function (resp) {
+            saveMyResponse(eventId, { responseId: resp.responseId, editToken: resp.editToken });
             toast('Danke! Deine Zusage wurde gespeichert.', 'ok');
+            var personalLink = baseUrl() + '?event=' + eventId + '&resp=' + resp.responseId + '&edit=' + resp.editToken;
+            if (!qs('.personal-link-box')) {
+              qs('.card-footer').insertAdjacentHTML('beforebegin', '<div class="share-box personal-link-box"><div class="share-label">🔗 Persönlicher Link zum späteren Ändern deiner Antwort</div><div class="share-row"><input type="text" readonly value="' + escapeHtml(personalLink) + '"><button class="btn btn-secondary btn-sm btn-inline copy-personal">Kopieren</button></div><p class="hint">Speichere diesen Link, falls du deine Zusage später von einem anderen Gerät ändern möchtest.</p></div>');
+              qs('.copy-personal').addEventListener('click', function () { copyText(personalLink, 'Persönlicher Link'); });
+            }
             btn.textContent = 'Änderungen speichern';
+            Backend.getEvent(eventId).then(function (d) { renderResultsBlock(resultsEl, d.event, d.responses, { admin: isAdmin, live: Backend.isRemote }); });
           }).catch(function (err) {
             toast(err.message || 'Fehler beim Speichern.', 'err');
             btn.textContent = mine ? 'Änderungen speichern' : 'Zusage abschicken';
@@ -932,7 +880,7 @@
         });
       }
 
-      if (isOwner) {
+      if (isAdmin) {
         qsa('[data-copy]').forEach(function (b) { b.addEventListener('click', function () { copyText(b.getAttribute('data-copy'), b.getAttribute('data-label')); }); });
 
         qs('#export-csv').addEventListener('click', function () {
@@ -962,7 +910,6 @@
         qs('#delete-event').addEventListener('click', function () {
           if (!confirm('Diese Planung inkl. aller Rückmeldungen unwiderruflich löschen?')) return;
           Backend.deleteEvent({ eventId: eventId }).then(function () {
-            removeMyEvent(eventId);
             toast('Planung gelöscht.', 'ok');
             location.href = baseUrl();
           }).catch(function (err) { toast(err.message || 'Fehler.', 'err'); });
@@ -996,7 +943,7 @@
     }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
   }
 
-  /* ---------- Nur-Ergebnisse-Ansicht (öffentlich, live, kein Formular) ---------- */
+  /* ---------- Nur-Ergebnisse-Ansicht (öffentlich, kein Formular, kein Login) ---------- */
   function renderResultsOnly(eventId) {
     app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Ergebnisse …</div>';
     Backend.getEvent(eventId).then(function (data) {
@@ -1007,10 +954,13 @@
         '<div class="card-body" id="r-results"></div></div>' +
         '<p style="text-align:center;"><a class="btn btn-secondary btn-inline" href="' + baseUrl() + '?event=' + eventId + '">✏️ Selbst eintragen</a></p>';
       var resultsEl = qs('#r-results');
-      renderResultsBlock(resultsEl, event, data.responses, { live: true });
-      setWatch(Backend.watchEvent(eventId, function (d) {
-        if (qs('#r-results') === resultsEl) renderResultsBlock(resultsEl, d.event, d.responses, { live: true });
-      }, function (err) { toast(err.message || 'Verbindung zur Planung verloren.', 'err'); }));
+      renderResultsBlock(resultsEl, event, data.responses, { live: Backend.isRemote });
+      if (Backend.isRemote) {
+        startPolling(function () {
+          if (qs('#r-results') !== resultsEl) { stopPolling(); return; }
+          Backend.getEvent(eventId).then(function (d) { renderResultsBlock(resultsEl, d.event, d.responses, { live: true }); }).catch(function () {});
+        }, 15000);
+      }
     }).catch(function (err) { errorCard(err.message || 'Planung konnte nicht geladen werden.'); });
   }
 
@@ -1018,11 +968,15 @@
    * ROUTER
    * ============================================================ */
   function route() {
-    setWatch(null);
+    stopPolling();
     var params = new URLSearchParams(location.search);
     var eventId = params.get('event');
     var view = params.get('view');
+    var respId = params.get('resp');
+    var editToken = params.get('edit');
     var justCreated = params.get('created') === '1';
+
+    if (respId && editToken && eventId) { saveMyResponse(eventId, { responseId: respId, editToken: editToken }); }
 
     if (!eventId) { renderStart(); return; }
     if (view === 'results') { renderResultsOnly(eventId); return; }
