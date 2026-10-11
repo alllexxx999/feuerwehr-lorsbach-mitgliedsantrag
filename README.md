@@ -54,6 +54,7 @@ Für die rechtsverbindliche Mitgliedschaft und das SEPA-Lastschriftmandat ist ei
 - **Aktueller Stand für alle sichtbar** ("3 von 5 Helfern für den Grillstand"), aktualisiert sich automatisch alle 15 Sekunden ohne Neuladen
 - **Zwei Links pro Planung**: ein Link zum Eintragen und ein reiner Ergebnis-Link zum Teilen, z. B. in der Gruppen-Chat-Nachricht
 - **Doodle-artige Übersicht** als Tabelle oder nach Schicht gruppiert, inkl. Bedarfsanzeige (grün/gelb/rot)
+- **Zeitkonflikt-Schutz**: Ein Helfer kann für mehrere Schichten gleichzeitig "Ja" sagen, aber nicht für zwei, die sich zeitlich überschneiden – der "Ja"-Button ist dann gesperrt und zeigt den Grund an. "Vielleicht" bleibt davon unabhängig immer wählbar.
 - **Helfer werden auf ihrem Gerät automatisch wiedererkannt** und können ihre Zusage jederzeit ändern; ein persönlicher Link erlaubt das Ändern auch von einem anderen Gerät aus
 - **Ein gemeinsames Verwalter-Login** (Vereins-Passwort) schaltet alle Admin-Funktionen frei: Schichten nachträglich bearbeiten, einzelne Rückmeldungen löschen, Planung schließen/wieder öffnen, CSV-Export, Planung endgültig löschen
 - **Übersicht aller Planungen** nach dem Login – kein Zettel mit gesammelten Links nötig

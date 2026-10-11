@@ -159,6 +159,8 @@
   .answer-btn.selected[data-val="yes"] { background: var(--fw-success); border-color: var(--fw-success); color: #fff; }
   .answer-btn.selected[data-val="maybe"] { background: var(--fw-gold); border-color: var(--fw-gold-dark); color: #4a3800; }
   .answer-btn.selected[data-val="no"] { background: var(--fw-grey-700); border-color: var(--fw-grey-700); color: #fff; }
+  .answer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .answer-btn:disabled:hover { border-color: var(--fw-grey-300); }
 
   /* ---------- RESULTS GRID ---------- */
   .results-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -678,6 +680,16 @@
     return '<span class="badge badge-' + p.cls + '">' + p.text + '</span>';
   }
 
+  /** Zwei Schichten überschneiden sich zeitlich, wenn sie am selben Tag liegen und
+   * sich ihre Zeitfenster überlappen. Fehlt bei einer der beiden eine vollständige
+   * Zeitangabe, wird sicherheitshalber von einer Überschneidung ausgegangen (man
+   * kann ohne Zeitangabe nicht ausschließen, dass sie zusammenfallen). */
+  function shiftsOverlap(a, b) {
+    if (!a.date || !b.date || a.date !== b.date) return false;
+    if (!a.timeFrom || !a.timeTo || !b.timeFrom || !b.timeTo) return true;
+    return a.timeFrom < b.timeTo && b.timeFrom < a.timeTo;
+  }
+
   /* ---------- Ergebnis-Grid (wiederverwendbar) ---------- */
   function renderResultsBlock(container, event, responses, opts) {
     opts = opts || {};
@@ -843,13 +855,49 @@
             '</div></div>';
         }).join('');
 
+        /** Sperrt den "Ja"-Button einer Schicht, wenn sie sich zeitlich mit einer
+         * anderen bereits mit "Ja" beantworteten Schicht überschneidet - so kann
+         * niemand aus Versehen für zwei zeitgleiche Schichten zusagen. */
+        function updateConflictUI() {
+          var yesShiftIds = qsa('.shift-card', shiftsEl)
+            .filter(function (c) { return !!qs('.answer-btn.selected[data-val="yes"]', c); })
+            .map(function (c) { return c.getAttribute('data-shift-id'); });
+          qsa('.shift-card', shiftsEl).forEach(function (card) {
+            var shiftId = card.getAttribute('data-shift-id');
+            var shift = event.shifts.find(function (s) { return s.id === shiftId; });
+            var yesBtn = qs('.answer-btn[data-val="yes"]', card);
+            var hintEl = qs('.conflict-hint', card);
+            if (yesShiftIds.indexOf(shiftId) !== -1) {
+              yesBtn.disabled = false; yesBtn.title = '';
+              if (hintEl) hintEl.remove();
+              return;
+            }
+            var conflict = event.shifts.find(function (s) {
+              return yesShiftIds.indexOf(s.id) !== -1 && shiftsOverlap(shift, s);
+            });
+            yesBtn.disabled = !!conflict;
+            if (conflict) {
+              yesBtn.title = 'Zeitkonflikt mit „' + conflict.title + '“';
+              if (!hintEl) {
+                qs('.answer-group', card).insertAdjacentHTML('afterend',
+                  '<p class="hint conflict-hint" style="color:var(--fw-error);margin-top:6px;">⚠️ Überschneidet sich zeitlich mit „' + escapeHtml(conflict.title) + '“ (' + escapeHtml(formatTimeRange(conflict.timeFrom, conflict.timeTo)) + ' Uhr) – dafür hast du bereits „Ja“ gesagt.</p>');
+              }
+            } else {
+              yesBtn.title = '';
+              if (hintEl) hintEl.remove();
+            }
+          });
+        }
+        updateConflictUI();
+
         shiftsEl.addEventListener('click', function (e) {
           var btn = e.target.closest('.answer-btn');
-          if (!btn) return;
+          if (!btn || btn.disabled) return;
           var group = btn.closest('.answer-group');
           var wasSelected = btn.classList.contains('selected');
           qsa('.answer-btn', group).forEach(function (b) { b.classList.remove('selected'); });
           if (!wasSelected) btn.classList.add('selected');
+          updateConflictUI();
         });
 
         qs('#p-submit').addEventListener('click', function () {
