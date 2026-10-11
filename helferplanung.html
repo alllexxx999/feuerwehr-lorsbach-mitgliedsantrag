@@ -446,7 +446,12 @@
       createEvent: function (b) { return useRemote ? apiPost(Object.assign({ action: 'createEvent' }, b)) : localCreateEvent(b); },
       updateEvent: function (b) { return useRemote ? apiPost(Object.assign({ action: 'updateEvent' }, b)) : localUpdateEvent(b); },
       deleteEvent: function (b) { return useRemote ? apiPost(Object.assign({ action: 'deleteEvent' }, b)) : localDeleteEvent(b); },
-      getEvent: function (id) { return useRemote ? apiGet({ action: 'getEvent', id: id }) : localGetEvent(id); },
+      getEvent: function (id, myEditToken) {
+        if (!useRemote) return localGetEvent(id);
+        var params = { action: 'getEvent', id: id };
+        if (myEditToken) params.editToken = myEditToken;
+        return apiGet(params);
+      },
       submitResponse: function (b) { return useRemote ? apiPost(Object.assign({ action: 'submitResponse' }, b)) : localSubmitResponse(b); },
       deleteResponse: function (b) { return useRemote ? apiPost(Object.assign({ action: 'deleteResponse' }, b)) : localDeleteResponse(b); }
     };
@@ -761,13 +766,13 @@
   /* ---------- Planungs-Ansicht (Helfer-Formular + ggf. Verwaltung) ---------- */
   function renderEventPage(eventId, justCreated) {
     app.innerHTML = demoBanner() + '<div class="spinner-row">Lädt Helferplanung …</div>';
-    Promise.all([Backend.getEvent(eventId), Backend.getSession()]).then(function (results) {
+    var stored = loadMyResponse(eventId);
+    Promise.all([Backend.getEvent(eventId, stored ? stored.editToken : undefined), Backend.getSession()]).then(function (results) {
       var data = results[0]; sessionCache = results[1];
       renderHeaderAuth();
       var event = data.event, responses = data.responses;
       var isAdmin = !!sessionCache.loggedIn;
 
-      var stored = loadMyResponse(eventId);
       var mine = stored ? (responses.find(function (r) { return r.responseId === stored.responseId; }) || null) : null;
       if (mine) mine = Object.assign({}, mine, { editToken: stored.editToken });
 

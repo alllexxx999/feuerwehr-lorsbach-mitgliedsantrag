@@ -74,6 +74,10 @@ function handle_logout(): void {
 function handle_get_event(): void {
   $eventId = (string)($_GET['id'] ?? '');
   if ($eventId === '') helfer_fail('id fehlt');
+  // Das eigene editToken (falls vorhanden) beweist "das ist meine Rückmeldung" -
+  // nur dafür und für Admins wird unten das Kontaktfeld mit ausgeliefert.
+  $myToken = (string)($_GET['editToken'] ?? '');
+  $isAdmin = helfer_is_admin();
   $db = helfer_db();
 
   $stmt = $db->prepare('SELECT * FROM helfer_events WHERE id = ?');
@@ -83,7 +87,18 @@ function handle_get_event(): void {
 
   $stmt = $db->prepare('SELECT * FROM helfer_responses WHERE event_id = ? ORDER BY created_at ASC');
   $stmt->execute([$eventId]);
-  $responses = array_map('helfer_response_row_to_array', $stmt->fetchAll());
+  $responses = array_map(function (array $row) use ($isAdmin, $myToken): array {
+    $arr = helfer_response_row_to_array($row);
+    $isOwn = $myToken !== '' && hash_equals($row['edit_token'], $myToken);
+    if (!$isAdmin && !$isOwn) {
+      // Kontaktdaten (Telefon/E-Mail) sind nur für die Verwaltung und die
+      // Rückmeldung selbst gedacht, nicht für alle Betrachter des (frei
+      // teilbaren) Ergebnis-Links - die Oberfläche zeigt sie ohnehin nur dem
+      // Admin (CSV-Export) bzw. dem Helfer selbst (eigenes Formular) an.
+      unset($arr['contact']);
+    }
+    return $arr;
+  }, $stmt->fetchAll());
 
   helfer_json_ok(['event' => helfer_event_row_to_array($eventRow), 'responses' => $responses]);
 }
